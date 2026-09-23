@@ -1,8 +1,28 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
 //    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+}
+
+val envFile = rootProject.file(".env")
+val localPropsFile = rootProject.file("local.properties")
+val mapsApiKey: String = when {
+    envFile.exists() -> {
+        val props = Properties()
+        envFile.inputStream().use { props.load(it) }
+        props.getProperty("MAPS_API_KEY", "")
+    }
+    localPropsFile.exists() -> {
+        val props = Properties()
+        localPropsFile.inputStream().use { props.load(it) }
+        props.getProperty("MAPS_API_KEY", "")
+    }
+    else -> ""
+}.ifBlank {
+    "AIzaSyPicTravellyDevApiKeyPlaceholder_ReplaceMeWithCloudKey"
 }
 
 android {
@@ -18,6 +38,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
     }
 
     buildTypes {
@@ -45,6 +66,7 @@ kotlin {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -76,4 +98,6 @@ dependencies {
     implementation(libs.retrofit.gson)
     implementation(libs.maps.compose)
     implementation(libs.play.services.maps)
+    implementation(libs.play.services.location)
+    implementation(libs.osmdroid.android)
 }
