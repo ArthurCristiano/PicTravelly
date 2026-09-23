@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Onde a camera grava a foto recem tirada, antes de ser confirmada -->
+    <cache-path
+        name="capturas"
+        path="capturas/" />
+</paths>
