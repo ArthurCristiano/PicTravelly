@@ -24,7 +24,8 @@ fun GoogleMapComponent(
     onMarkerClick: (MapMarkerData) -> Unit,
     modifier: Modifier = Modifier,
     isInteractive: Boolean = true,
-    onMapClick: (() -> Unit)? = null
+    onMapClick: (() -> Unit)? = null,
+    onLocationPick: ((Double, Double) -> Unit)? = null
 ) {
     val initialLatLng = LatLng(latitude, longitude)
     val cameraPositionState = rememberCameraPositionState {
@@ -48,8 +49,9 @@ fun GoogleMapComponent(
             scrollGesturesEnabled = isInteractive,
             zoomGesturesEnabled = isInteractive
         ),
-        onMapClick = {
+        onMapClick = { latLng ->
             onMapClick?.invoke()
+            onLocationPick?.invoke(latLng.latitude, latLng.longitude)
         }
     ) {
         markers.forEach { markerData ->

@@ -44,7 +44,6 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -189,28 +188,6 @@ fun HomeScreen(
 
             // Espaço de respiro para o Dock flutuante
             Spacer(modifier = Modifier.height(72.dp))
-        }
-
-        // ============================================================================
-        // ➕ BOTÃO DE AÇÃO RÁPIDA (FAB) PARA NOVO REGISTRO:
-        // - Posicionado no canto inferior direito, logo acima do dock
-        // ============================================================================
-        if (!uiState.isMapExpanded) {
-            FloatingActionButton(
-                onClick = onNavigateToCreate,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 20.dp, bottom = 86.dp),
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = CircleShape
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Nova Memória",
-                    modifier = Modifier.size(26.dp)
-                )
-            }
         }
 
         // ============================================================================

@@ -1,6 +1,5 @@
 package com.app.pictravelly.core.design.components
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -12,16 +11,22 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -36,10 +41,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 /**
  * Representação de cada atalho do Dock One UI 9.
+ *
+ * O botão central de cadastro não entra nesta lista: ele não é uma rota,
+ * apenas abre a folha de escolha entre nova viagem e novo ponto turístico.
  */
 sealed class DockDestination(
     val route: String,
@@ -47,29 +58,38 @@ sealed class DockDestination(
     val icon: ImageVector
 ) {
     object Home : DockDestination("home_route", "Início", Icons.Default.Explore)
-    object Spots : DockDestination("spots_route", "Diário", Icons.Default.CollectionsBookmark)
+    object Trips : DockDestination("trips_route", "Diário", Icons.Default.CollectionsBookmark)
+    object Map : DockDestination("map_route", "Mapa", Icons.Default.Map)
     object Settings : DockDestination("settings_route", "Ajustes", Icons.Default.Settings)
 
     companion object {
-        val items = listOf(Home, Spots, Settings)
+        /** Duas abas à esquerda do "+" e duas à direita. */
+        val items = listOf(Home, Trips, Map, Settings)
     }
 }
 
 /**
  * Dock Pill-Shaped flutuante com acabamento translúcido (Frosted Glass) inspirado no One UI 9.
- * Ícones consistentes e harmônicos entre Início, Diário e Ajustes.
+ *
+ * Cada atalho mostra o ícone com o rótulo logo abaixo, o que mantém os quatro
+ * destinos e o botão central de cadastro confortáveis na mesma linha.
  */
 @Composable
 fun PicTravellyOneUiDock(
     currentRoute: String,
     onNavigate: (DockDestination) -> Unit,
+    onAddEntry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val half = DockDestination.items.size / 2
+    val leftItems = DockDestination.items.take(half)
+    val rightItems = DockDestination.items.drop(half)
+
     Box(
         modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(horizontal = 24.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         contentAlignment = Alignment.Center
     ) {
         // Superfície translúcida One UI 9 com cantos em pílula
@@ -93,15 +113,24 @@ fun PicTravellyOneUiDock(
             color = MaterialTheme.colorScheme.surface.copy(alpha = 0.82f) // Frosted glass translucency
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                DockDestination.items.forEach { item ->
-                    val isSelected = currentRoute == item.route
+                leftItems.forEach { item ->
                     DockItem(
                         item = item,
-                        isSelected = isSelected,
+                        isSelected = currentRoute == item.route,
+                        onClick = { onNavigate(item) }
+                    )
+                }
+
+                DockAddButton(onClick = onAddEntry)
+
+                rightItems.forEach { item ->
+                    DockItem(
+                        item = item,
+                        isSelected = currentRoute == item.route,
                         onClick = { onNavigate(item) }
                     )
                 }
@@ -110,6 +139,42 @@ fun PicTravellyOneUiDock(
     }
 }
 
+/**
+ * Botão central de cadastro, em destaque sobre a cor primária.
+ */
+@Composable
+private fun DockAddButton(onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .padding(horizontal = 6.dp)
+            .size(48.dp)
+            .shadow(
+                elevation = 8.dp,
+                shape = CircleShape,
+                spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f)
+            )
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primary)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                role = Role.Button,
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.Add,
+            contentDescription = "Adicionar viagem ou ponto turístico",
+            tint = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.size(26.dp)
+        )
+    }
+}
+
+/**
+ * Atalho individual do dock: ícone com o rótulo logo abaixo.
+ */
 @Composable
 private fun DockItem(
     item: DockDestination,
@@ -117,33 +182,41 @@ private fun DockItem(
     onClick: () -> Unit
 ) {
     val backgroundColor by animateColorAsState(
-        targetValue = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.90f) else Color.Transparent,
+        targetValue = if (isSelected) {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.90f)
+        } else {
+            Color.Transparent
+        },
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
         label = "dock_bg_color"
     )
 
     val contentColor by animateColorAsState(
-        targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+        targetValue = if (isSelected) {
+            MaterialTheme.colorScheme.onPrimaryContainer
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        },
         animationSpec = tween(200),
         label = "dock_content_color"
     )
 
     Box(
         modifier = Modifier
-            .height(44.dp)
-            .clip(CircleShape)
+            .width(62.dp)
+            .clip(RoundedCornerShape(20.dp))
             .background(backgroundColor)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = onClick
             )
-            .padding(horizontal = 14.dp),
+            .padding(vertical = 6.dp),
         contentAlignment = Alignment.Center
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Icon(
                 imageVector = item.icon,
@@ -152,15 +225,16 @@ private fun DockItem(
                 modifier = Modifier.size(22.dp)
             )
 
-            AnimatedVisibility(visible = isSelected) {
-                Text(
-                    text = item.title,
-                    color = contentColor,
-                    style = MaterialTheme.typography.labelMedium,
-                    modifier = Modifier.padding(start = 6.dp),
-                    maxLines = 1
-                )
-            }
+            Spacer(modifier = Modifier.height(2.dp))
+
+            Text(
+                text = item.title,
+                color = contentColor,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                textAlign = TextAlign.Center,
+                maxLines = 1
+            )
         }
     }
 }

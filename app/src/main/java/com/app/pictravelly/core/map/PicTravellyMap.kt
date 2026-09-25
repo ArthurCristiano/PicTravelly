@@ -27,6 +27,8 @@ fun PicTravellyMap(
     onMarkerClick: (MapMarkerData) -> Unit = {},
     isInteractive: Boolean = true,
     onMapClick: (() -> Unit)? = null,
+    /** Recebe a coordenada tocada. Usado pelo formulário para ajustar o local. */
+    onLocationPick: ((Double, Double) -> Unit)? = null,
     engine: MapEngineType = MapConfig.activeEngine
 ) {
     when (engine) {
@@ -39,7 +41,8 @@ fun PicTravellyMap(
                 onMarkerClick = onMarkerClick,
                 modifier = modifier,
                 isInteractive = isInteractive,
-                onMapClick = onMapClick
+                onMapClick = onMapClick,
+                onLocationPick = onLocationPick
             )
         }
         MapEngineType.GOOGLE_MAPS -> {
@@ -51,7 +54,8 @@ fun PicTravellyMap(
                 onMarkerClick = onMarkerClick,
                 modifier = modifier,
                 isInteractive = isInteractive,
-                onMapClick = onMapClick
+                onMapClick = onMapClick,
+                onLocationPick = onLocationPick
             )
         }
     }

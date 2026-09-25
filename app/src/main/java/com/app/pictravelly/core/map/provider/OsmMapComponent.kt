@@ -31,7 +31,8 @@ fun OsmMapComponent(
     onMarkerClick: (MapMarkerData) -> Unit,
     modifier: Modifier = Modifier,
     isInteractive: Boolean = true,
-    onMapClick: (() -> Unit)? = null
+    onMapClick: (() -> Unit)? = null,
+    onLocationPick: ((Double, Double) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -77,11 +78,12 @@ fun OsmMapComponent(
             // Limpa overlays anteriores para sincronizar marcadores
             map.overlays.clear()
 
-            // Listener de toque no mapa (para expandir card se aplicável)
-            if (onMapClick != null) {
+            // Listener de toque no mapa: expande o card e/ou escolhe a coordenada
+            if (onMapClick != null || onLocationPick != null) {
                 val eventsReceiver = object : MapEventsReceiver {
                     override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
-                        onMapClick()
+                        onMapClick?.invoke()
+                        if (p != null) onLocationPick?.invoke(p.latitude, p.longitude)
                         return true
                     }
                     override fun longPressHelper(p: GeoPoint?): Boolean = false
