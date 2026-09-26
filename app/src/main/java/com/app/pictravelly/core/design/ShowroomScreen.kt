@@ -18,7 +18,7 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -114,7 +114,7 @@ fun ShowroomScreen() {
                 color = MaterialTheme.colorScheme.onBackground
             )
 
-            Divider(color = MaterialTheme.colorScheme.outlineVariant)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
             // Seção de Botões
             SectionTitle("Ações (Botões)")
@@ -134,7 +134,7 @@ fun ShowroomScreen() {
                 Text("Botão Outline (Cancelar)")
             }
 
-            Divider(color = MaterialTheme.colorScheme.outlineVariant)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
             // Seção de Cards
             SectionTitle("Superfícies e Cards")
