@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.app.pictravelly.MainActivityViewModel
 import com.app.pictravelly.PicTravellyApp
 import com.app.pictravelly.core.data.TouristSpotRepository
 import com.app.pictravelly.core.data.TripRepository
@@ -54,7 +55,16 @@ object AppViewModelProvider {
 
         // Inicializador do SettingsViewModel
         initializer {
-            SettingsViewModel()
+            SettingsViewModel(
+                repository = picTravellyApplication().container.settingsRepository
+            )
+        }
+
+        // Inicializador do MainActivityViewModel
+        initializer {
+            MainActivityViewModel(
+                settingsRepository = picTravellyApplication().container.settingsRepository
+            )
         }
     }
 

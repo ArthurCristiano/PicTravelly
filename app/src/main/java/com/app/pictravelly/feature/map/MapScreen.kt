@@ -44,7 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.app.pictravelly.core.database.model.TouristSpotWithImages
+import com.app.pictravelly.core.database.model.touristSpot.TouristSpotWithImages
 import com.app.pictravelly.core.design.components.PicTravellyCard
 import com.app.pictravelly.core.location.LocationHelper
 import com.app.pictravelly.core.map.PicTravellyMap

@@ -1,8 +1,8 @@
 package com.app.pictravelly.core.data
 
-import com.app.pictravelly.core.database.model.SpotImageEntity
-import com.app.pictravelly.core.database.model.TouristSpotEntity
-import com.app.pictravelly.core.database.model.TouristSpotWithImages
+import com.app.pictravelly.core.database.model.touristSpot.SpotImageEntity
+import com.app.pictravelly.core.database.model.touristSpot.TouristSpotEntity
+import com.app.pictravelly.core.database.model.touristSpot.TouristSpotWithImages
 import kotlinx.coroutines.flow.Flow
 
 /**

@@ -2,6 +2,7 @@ package com.app.pictravelly.core.map
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.app.pictravelly.core.database.model.settings.MapEngineType
 import com.app.pictravelly.core.map.provider.GoogleMapComponent
 import com.app.pictravelly.core.map.provider.OsmMapComponent
 

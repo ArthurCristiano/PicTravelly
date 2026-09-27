@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- O Tema Principal que você já deve ter -->
     <style name="Theme.PicTravelly" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- NOVO: O Tema da Splash Screen -->
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <!-- Cor de fundo da Splash (Use a cor principal do seu app) -->
+        <item name="windowSplashScreenBackground">#FFFFFF</item>
+        <!-- Ícone que aparecerá no centro (Aponte para o logo em drawable) -->
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_round</item>
+        <!-- Após a Splash terminar, o Android passa o bastão para este tema base: -->
+        <item name="postSplashScreenTheme">@style/Theme.PicTravelly</item>
+    </style>
 </resources>

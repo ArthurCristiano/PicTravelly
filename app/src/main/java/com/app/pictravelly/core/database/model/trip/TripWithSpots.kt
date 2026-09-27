@@ -1,7 +1,9 @@
-package com.app.pictravelly.core.database.model
+package com.app.pictravelly.core.database.model.trip
 
 import androidx.room.Embedded
 import androidx.room.Relation
+import com.app.pictravelly.core.database.model.touristSpot.TouristSpotEntity
+import com.app.pictravelly.core.database.model.touristSpot.TouristSpotWithImages
 
 /**
  * Modelo de relação entre Trip e seus pontos turísticos.

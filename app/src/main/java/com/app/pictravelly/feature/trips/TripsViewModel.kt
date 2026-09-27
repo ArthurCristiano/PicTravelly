@@ -3,8 +3,8 @@ package com.app.pictravelly.feature.trips
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.pictravelly.core.data.TripRepository
-import com.app.pictravelly.core.database.model.TouristSpotWithImages
-import com.app.pictravelly.core.database.model.TripWithSpots
+import com.app.pictravelly.core.database.model.touristSpot.TouristSpotWithImages
+import com.app.pictravelly.core.database.model.trip.TripWithSpots
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine

@@ -1,9 +1,10 @@
-package com.app.pictravelly.core.database.model
+package com.app.pictravelly.core.database.model.touristSpot
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.app.pictravelly.core.database.model.trip.TripEntity
 
 /**
  * Entidade de representação de um Ponto Turístico no Room Database.

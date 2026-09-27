@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.pictravelly.core.data.TouristSpotRepository
 import com.app.pictravelly.core.data.TripRepository
-import com.app.pictravelly.core.database.model.TouristSpotWithImages
-import com.app.pictravelly.core.database.model.TripEntity
+import com.app.pictravelly.core.database.model.touristSpot.TouristSpotWithImages
+import com.app.pictravelly.core.database.model.trip.TripEntity
 import com.app.pictravelly.core.navigation.DestinationScreen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

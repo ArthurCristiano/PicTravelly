@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -54,8 +53,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.app.pictravelly.core.database.model.TouristSpotWithImages
-import com.app.pictravelly.core.database.model.TripEntity
+import com.app.pictravelly.core.database.model.touristSpot.TouristSpotWithImages
+import com.app.pictravelly.core.database.model.trip.TripEntity
 import com.app.pictravelly.core.design.components.PicTravellyCard
 import com.app.pictravelly.core.design.components.PicTravellyText
 import java.text.SimpleDateFormat

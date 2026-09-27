@@ -49,7 +49,7 @@ import com.app.pictravelly.feature.home.HomeScreen
 import com.app.pictravelly.feature.home.HomeViewModel
 import com.app.pictravelly.feature.map.MapScreen
 import com.app.pictravelly.feature.map.MapViewModel
-import com.app.pictravelly.feature.settings.SettingsScreen
+import com.app.pictravelly.feature.settings.SettingsRoute
 import com.app.pictravelly.feature.settings.SettingsViewModel
 import com.app.pictravelly.feature.spot_detail.SpotDetailScreen
 import com.app.pictravelly.feature.spot_detail.SpotDetailViewModel
@@ -220,7 +220,7 @@ fun PicTravellyAppScreen() {
                 composable(DestinationScreen.SETTINGS.route) {
                     val settingsViewModel: SettingsViewModel =
                         viewModel(factory = AppViewModelProvider.Factory)
-                    SettingsScreen(
+                    SettingsRoute(
                         viewModel = settingsViewModel,
                         contentPadding = paddingValues
                     )

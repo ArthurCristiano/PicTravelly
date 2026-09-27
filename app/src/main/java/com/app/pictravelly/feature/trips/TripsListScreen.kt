@@ -40,7 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.app.pictravelly.core.database.model.TripWithSpots
+import com.app.pictravelly.core.database.model.trip.TripWithSpots
 import com.app.pictravelly.core.design.components.PicTravellyCard
 import com.app.pictravelly.core.design.components.PicTravellyText
 import com.app.pictravelly.core.design.components.PicTravellyTitle

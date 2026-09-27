@@ -68,6 +68,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
+import com.app.pictravelly.core.database.model.trip.TripEntity
 import com.app.pictravelly.core.design.components.PicTravellyActionTile
 import com.app.pictravelly.core.design.components.PicTravellyButton
 import com.app.pictravelly.core.design.components.PicTravellyCard
@@ -426,7 +427,7 @@ fun SpotFormScreen(
 @Composable
 private fun TripSelectorField(
     selectedTripTitle: String,
-    availableTrips: List<com.app.pictravelly.core.database.model.TripEntity>,
+    availableTrips: List<TripEntity>,
     onSelectTrip: (Long?) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }

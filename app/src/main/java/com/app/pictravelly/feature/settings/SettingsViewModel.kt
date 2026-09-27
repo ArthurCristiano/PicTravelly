@@ -1,43 +1,51 @@
 package com.app.pictravelly.feature.settings
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.app.pictravelly.core.data.SettingsRepository
+import com.app.pictravelly.core.database.model.settings.AppLanguage
+import com.app.pictravelly.core.database.model.settings.AppTheme
+import com.app.pictravelly.core.database.model.settings.MapEngineType
 import com.app.pictravelly.core.map.MapConfig
-import com.app.pictravelly.core.map.MapEngineType
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-
-enum class AppThemeSetting(val label: String) {
-    SYSTEM("Padrão do Sistema"),
-    LIGHT("Modo Claro"),
-    DARK("Modo Escuro")
-}
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 data class SettingsUiState(
-    val selectedTheme: AppThemeSetting = AppThemeSetting.SYSTEM,
-    val selectedLanguage: String = "Português (Brasil)",
-    val selectedMapEngine: MapEngineType = MapConfig.activeEngine
+    val selectedTheme: AppTheme = AppTheme.SYSTEM,
+    val selectedLanguage: AppLanguage = AppLanguage.PT_BR,
+    val selectedMapEngine: MapEngineType = MapConfig.activeEngine // TODO: Migrar para DataStore
 )
 
-/**
- * ViewModel que gerencia as preferências do usuário, incluindo o motor de mapas.
- */
-class SettingsViewModel : ViewModel() {
+class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
 
-    private val _uiState = MutableStateFlow(SettingsUiState())
-    val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+) {
 
-    fun setTheme(theme: AppThemeSetting) {
-        _uiState.update { it.copy(selectedTheme = theme) }
+    // Lê o modelo puro, converte para estado de tela e garante reatividade contínua
+    val uiState: StateFlow<SettingsUiState> =
+        repository.userDataStream.map { userSettings ->
+            SettingsUiState(
+                selectedTheme = userSettings.theme,
+                selectedLanguage = userSettings.language,
+                selectedMapEngine = userSettings.mapEngine
+            )
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000), // Padrão recomendado pela Google
+            initialValue = SettingsUiState()
+        )
+
+    fun setTheme(theme: AppTheme) = viewModelScope.launch {
+        repository.setTheme(theme)
     }
 
-    fun setLanguage(language: String) {
-        _uiState.update { it.copy(selectedLanguage = language) }
+    fun setLanguage(language: AppLanguage) = viewModelScope.launch {
+        repository.setLanguage(language)
     }
 
-    fun setMapEngine(engine: MapEngineType) {
-        MapConfig.activeEngine = engine
-        _uiState.update { it.copy(selectedMapEngine = engine) }
+    fun setMapEngine(engine: MapEngineType) = viewModelScope.launch {
+        repository.setMapEngine(engine)
     }
 }

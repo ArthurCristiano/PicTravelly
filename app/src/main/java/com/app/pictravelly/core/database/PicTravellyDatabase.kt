@@ -6,9 +6,9 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.app.pictravelly.core.database.dao.TouristSpotDao
 import com.app.pictravelly.core.database.dao.TripDao
-import com.app.pictravelly.core.database.model.SpotImageEntity
-import com.app.pictravelly.core.database.model.TouristSpotEntity
-import com.app.pictravelly.core.database.model.TripEntity
+import com.app.pictravelly.core.database.model.touristSpot.SpotImageEntity
+import com.app.pictravelly.core.database.model.touristSpot.TouristSpotEntity
+import com.app.pictravelly.core.database.model.trip.TripEntity
 
 /**
  * Banco de dados principal Room da aplicação.
