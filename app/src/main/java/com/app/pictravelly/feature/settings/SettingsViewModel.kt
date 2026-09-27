@@ -1,6 +1,7 @@
 package com.app.pictravelly.feature.settings
 
 import androidx.lifecycle.ViewModel
+import com.app.pictravelly.core.design.theme.ThemeController
 import com.app.pictravelly.core.map.MapConfig
 import com.app.pictravelly.core.map.MapEngineType
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,20 +16,17 @@ enum class AppThemeSetting(val label: String) {
 }
 
 data class SettingsUiState(
-    val selectedTheme: AppThemeSetting = AppThemeSetting.SYSTEM,
+    val selectedTheme: AppThemeSetting = ThemeController.selectedTheme.value,
     val selectedLanguage: String = "Português (Brasil)",
     val selectedMapEngine: MapEngineType = MapConfig.activeEngine
 )
-
-/**
- * ViewModel que gerencia as preferências do usuário, incluindo o motor de mapas.
- */
 class SettingsViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     fun setTheme(theme: AppThemeSetting) {
+        ThemeController.setTheme(theme)
         _uiState.update { it.copy(selectedTheme = theme) }
     }
 

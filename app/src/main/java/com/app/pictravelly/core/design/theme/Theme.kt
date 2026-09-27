@@ -11,10 +11,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val LightColorScheme = lightColorScheme(
-    primary = PrimaryBlue,
-    onPrimary = OnPrimaryBlue,
-    primaryContainer = PrimaryContainerBlue,
-    onPrimaryContainer = OnPrimaryContainerBlue,
+    primary = PrimaryBrown,
+    onPrimary = OnPrimaryBrown,
+    primaryContainer = PrimaryContainerBrown,
+    onPrimaryContainer = OnPrimaryContainerBrown,
     secondary = SecondaryTerracotta,
     onSecondary = OnSecondaryTerracotta,
     secondaryContainer = SecondaryContainerTerracotta,
@@ -25,14 +25,18 @@ private val LightColorScheme = lightColorScheme(
     onSurface = TextPrimaryLight,
     surfaceVariant = SurfaceLight,
     onSurfaceVariant = TextSecondaryLight,
-    error = ErrorRed
+    outline = OutlineLight,
+    outlineVariant = OutlineVariantLight,
+    error = ErrorRed,
+    errorContainer = ErrorContainerLight,
+    onErrorContainer = OnErrorContainerLight
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = PrimaryBlueDark,
-    onPrimary = OnPrimaryBlueDark,
-    primaryContainer = PrimaryContainerBlueDark,
-    onPrimaryContainer = OnPrimaryContainerBlueDark,
+    primary = PrimaryBrownDark,
+    onPrimary = OnPrimaryBrownDark,
+    primaryContainer = PrimaryContainerBrownDark,
+    onPrimaryContainer = OnPrimaryContainerBrownDark,
     secondary = SecondaryTerracottaDark,
     onSecondary = OnSecondaryTerracottaDark,
     secondaryContainer = SecondaryContainerTerracottaDark,
@@ -43,7 +47,11 @@ private val DarkColorScheme = darkColorScheme(
     onSurface = TextPrimaryDark,
     surfaceVariant = SurfaceDark,
     onSurfaceVariant = TextSecondaryDark,
-    error = ErrorRedDark
+    outline = OutlineDark,
+    outlineVariant = OutlineVariantDark,
+    error = ErrorRedDark,
+    errorContainer = ErrorContainerDark,
+    onErrorContainer = OnErrorContainerDark
 )
 
 @Composable
