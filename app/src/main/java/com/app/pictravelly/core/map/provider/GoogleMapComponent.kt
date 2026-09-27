@@ -1,5 +1,6 @@
 package com.app.pictravelly.core.map.provider
 
+import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
@@ -15,6 +16,7 @@ import com.google.maps.android.compose.rememberCameraPositionState
 /**
  * Componente de mapa baseado no Google Maps SDK.
  */
+@SuppressLint("UnrememberedMutableState")
 @Composable
 fun GoogleMapComponent(
     latitude: Double,

@@ -6,14 +6,23 @@ import com.app.pictravelly.core.data.TouristSpotRepository
 import com.app.pictravelly.core.database.model.touristSpot.TouristSpotWithImages
 import com.app.pictravelly.core.location.LocationHelper
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 
 /**
- * Estado da UI da Tela Inicial (Home).
+ * Estado dinâmico provisório (Ações do usuário na tela).
  */
+private data class HomeTransientState(
+    val isMapExpanded: Boolean = false,
+    val selectedSpot: TouristSpotWithImages? = null,
+    val currentLatitude: Double = LocationHelper.DEFAULT_LATITUDE,
+    val currentLongitude: Double = LocationHelper.DEFAULT_LONGITUDE,
+    val isLoadingLocation: Boolean = true
+)
+
 data class HomeUiState(
     val spots: List<TouristSpotWithImages> = emptyList(),
     val isMapExpanded: Boolean = false,
@@ -24,7 +33,6 @@ data class HomeUiState(
 ) {
     val totalSpotsCount: Int get() = spots.size
 
-    // Nível e XP calculados com base na quantidade de locais explorados (Gamificação)
     val travelerLevel: String
         get() = when (totalSpotsCount) {
             0 -> "Novato do Diário"
@@ -46,44 +54,43 @@ data class HomeUiState(
         }
 }
 
-/**
- * ViewModel responsável pela lógica de negócios da Home e do Mapa Interativo.
- */
 class HomeViewModel(
-    private val repository: TouristSpotRepository
+    repository: TouristSpotRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(HomeUiState())
-    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    // Guarda apenas os estados transitórios (cliques, expansões e GPS)
+    private val _transientState = MutableStateFlow(HomeTransientState())
 
-    init {
-        // Observa em tempo real os locais cadastrados no banco
-        viewModelScope.launch {
-            repository.getAllSpotsStream().collect { spotsList ->
-                _uiState.update { it.copy(spots = spotsList) }
-            }
-        }
-    }
+    // A Mágica: Funde o banco de dados e os estados transitórios automaticamente.
+    val uiState: StateFlow<HomeUiState> = combine(
+        repository.getAllSpotsStream(),
+        _transientState
+    ) { spotsList, transient ->
+        HomeUiState(
+            spots = spotsList,
+            isMapExpanded = transient.isMapExpanded,
+            selectedSpot = transient.selectedSpot,
+            currentLatitude = transient.currentLatitude,
+            currentLongitude = transient.currentLongitude,
+            isLoadingLocation = transient.isLoadingLocation
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = HomeUiState() // Estado inicial vazio
+    )
 
     fun updateCurrentLocation(lat: Double, lng: Double) {
-        _uiState.update {
-            it.copy(
-                currentLatitude = lat,
-                currentLongitude = lng,
-                isLoadingLocation = false
-            )
+        _transientState.update {
+            it.copy(currentLatitude = lat, currentLongitude = lng, isLoadingLocation = false)
         }
-    }
-
-    fun toggleMapExpansion() {
-        _uiState.update { it.copy(isMapExpanded = !it.isMapExpanded) }
     }
 
     fun setMapExpanded(expanded: Boolean) {
-        _uiState.update { it.copy(isMapExpanded = expanded) }
+        _transientState.update { it.copy(isMapExpanded = expanded) }
     }
 
     fun selectSpot(spot: TouristSpotWithImages?) {
-        _uiState.update { it.copy(selectedSpot = spot) }
+        _transientState.update { it.copy(selectedSpot = spot) }
     }
 }

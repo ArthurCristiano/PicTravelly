@@ -45,7 +45,7 @@ import com.app.pictravelly.core.design.components.DockDestination
 import com.app.pictravelly.core.design.components.PicTravellyOneUiDock
 import com.app.pictravelly.core.di.AppViewModelProvider
 import com.app.pictravelly.core.navigation.DestinationScreen
-import com.app.pictravelly.feature.home.HomeScreen
+import com.app.pictravelly.feature.home.HomeRoute
 import com.app.pictravelly.feature.home.HomeViewModel
 import com.app.pictravelly.feature.map.MapScreen
 import com.app.pictravelly.feature.map.MapViewModel
@@ -100,7 +100,7 @@ fun PicTravellyAppScreen() {
                 composable(DestinationScreen.HOME.route) {
                     val homeViewModel: HomeViewModel =
                         viewModel(factory = AppViewModelProvider.Factory)
-                    HomeScreen(
+                    HomeRoute(
                         viewModel = homeViewModel,
                         onNavigateToDetail = { spotId ->
                             navController.navigate(DestinationScreen.createSpotDetailRoute(spotId))
@@ -111,7 +111,7 @@ fun PicTravellyAppScreen() {
                         onNavigateToCreate = {
                             navController.navigate(DestinationScreen.createSpotFormRoute())
                         },
-                        contentPadding = paddingValues
+                        contentPadding = paddingValues,
                     )
                 }
 
@@ -307,16 +307,14 @@ fun PicTravellyAppScreen() {
     // ============================================================================
     if (showAddSheet) {
         ModalBottomSheet(
-            onDismissRequest = { showAddSheet = false },
+            onDismissRequest = {},
             sheetState = addSheetState
         ) {
             AddEntrySheetContent(
                 onNewTrip = {
-                    showAddSheet = false
                     navController.navigate(DestinationScreen.createTripFormRoute())
                 },
                 onNewSpot = {
-                    showAddSheet = false
                     navController.navigate(DestinationScreen.createSpotFormRoute())
                 }
             )
