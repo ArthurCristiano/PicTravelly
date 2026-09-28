@@ -5,103 +5,132 @@ import androidx.lifecycle.viewModelScope
 import com.app.pictravelly.core.data.TouristSpotRepository
 import com.app.pictravelly.core.data.TripRepository
 import com.app.pictravelly.core.database.model.touristSpot.TouristSpotWithImages
-import com.app.pictravelly.core.database.model.trip.TripEntity
 import com.app.pictravelly.core.navigation.DestinationScreen
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+/**
+ * Modelo pré-formatado (sem lógica) que a Tela consome.
+ */
+data class TripDetailHeaderUiModel(
+    val id: Long,
+    val title: String,
+    val description: String,
+    val coverImageUri: String?,
+    val formattedPeriod: String
+)
+
+/**
+ * Estado provisório (Ações do Usuário).
+ */
+private data class TripDetailTransientState(
+    val wasDeleted: Boolean = false
+)
 
 /**
  * Estado da tela de detalhe de uma viagem.
  */
 data class TripDetailUiState(
-    val trip: TripEntity? = null,
+    val tripHeader: TripDetailHeaderUiModel? = null,
     val spots: List<TouristSpotWithImages> = emptyList(),
     val isLoading: Boolean = true,
-    /** True quando a tela está exibindo o grupo "Pontos sem viagem". */
     val isLooseGroup: Boolean = false,
     val wasDeleted: Boolean = false
 ) {
     val displayTitle: String
-        get() = if (isLooseGroup) "Pontos sem viagem" else trip?.title.orEmpty()
+        get() = if (isLooseGroup) "Pontos sem viagem" else tripHeader?.title.orEmpty()
 
     val spotsCount: Int get() = spots.size
 }
 
-/**
- * ViewModel do detalhe da viagem: observa a viagem e os pontos turísticos
- * cadastrados dentro dela.
- *
- * Quando recebe [DestinationScreen.NO_TRIP_ID], passa a observar os pontos que
- * não pertencem a nenhuma viagem.
- */
+@OptIn(ExperimentalCoroutinesApi::class)
 class TripDetailViewModel(
     private val tripRepository: TripRepository,
     private val spotRepository: TouristSpotRepository,
     private val tripId: Long
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(TripDetailUiState())
-    val uiState: StateFlow<TripDetailUiState> = _uiState.asStateFlow()
-
     private val isLooseGroup = tripId == DestinationScreen.NO_TRIP_ID
 
-    init {
-        if (isLooseGroup) {
-            observeLooseSpots()
-        } else {
-            observeTrip()
+    private val dateFormat = SimpleDateFormat("dd 'de' MMM, yyyy", Locale.forLanguageTag("pt-BR"))
+    private val shortDateFormat = SimpleDateFormat("dd 'de' MMM", Locale.forLanguageTag("pt-BR"))
+
+    private val _transientState = MutableStateFlow(TripDetailTransientState())
+
+    // A Mágica: Decide automaticamente qual fluxo escutar baseado se é "LooseGroup" ou não.
+    private val _databaseFlow = if (isLooseGroup) {
+        tripRepository.getSpotsWithoutTripStream().flatMapLatest { spots ->
+            flowOf(null to spots) // Retorna header nulo + lista de spots
+        }
+    } else {
+        tripRepository.getTripStream(tripId).flatMapLatest { tripWithSpots ->
+            flowOf(tripWithSpots?.trip to tripWithSpots?.spots.orEmpty())
         }
     }
 
-    private fun observeLooseSpots() {
-        _uiState.update { it.copy(isLooseGroup = true) }
-        viewModelScope.launch {
-            tripRepository.getSpotsWithoutTripStream().collect { spots ->
-                _uiState.update {
-                    it.copy(spots = spots, isLoading = false)
-                }
-            }
-        }
-    }
+    val uiState: StateFlow<TripDetailUiState> = combine(
+        _databaseFlow,
+        _transientState
+    ) { (tripEntity, spotsList), transient ->
 
-    private fun observeTrip() {
-        viewModelScope.launch {
-            tripRepository.getTripStream(tripId).collect { tripWithSpots ->
-                _uiState.update {
-                    it.copy(
-                        trip = tripWithSpots?.trip,
-                        spots = tripWithSpots?.spots.orEmpty(),
-                        isLoading = false,
-                        // A viagem sai do banco quando é apagada; a tela então se
-                        // fecha. Um id inválido cai no mesmo caminho.
-                        wasDeleted = tripWithSpots == null
-                    )
-                }
-            }
+        // Verifica se a viagem foi apagada no banco
+        val isDeletedInDb = !isLooseGroup && tripEntity == null
+
+        val headerUiModel = tripEntity?.let { trip ->
+            TripDetailHeaderUiModel(
+                id = trip.id,
+                title = trip.title,
+                description = trip.description,
+                coverImageUri = trip.coverImageUri,
+                formattedPeriod = formatPeriod(trip.startDate, trip.endDate)
+            )
         }
+
+        TripDetailUiState(
+            tripHeader = headerUiModel,
+            spots = spotsList,
+            isLoading = false,
+            isLooseGroup = isLooseGroup,
+            wasDeleted = transient.wasDeleted || isDeletedInDb // Une deleção via botão com deleção via DB
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = TripDetailUiState(isLoading = true, isLooseGroup = isLooseGroup)
+    )
+
+    private fun formatPeriod(startDate: Long, endDate: Long?): String {
+        val start = Date(startDate)
+        if (endDate == null) return "${dateFormat.format(start)} · em andamento"
+        val end = Date(endDate)
+        if (startDate == endDate) return dateFormat.format(start)
+        return "${shortDateFormat.format(start)} - ${dateFormat.format(end)}"
     }
 
     fun deleteTrip() {
         if (isLooseGroup) return
         viewModelScope.launch {
             tripRepository.deleteTrip(tripId)
-            _uiState.update { it.copy(wasDeleted = true) }
+            _transientState.update { it.copy(wasDeleted = true) }
         }
     }
 
-    /** Solta o ponto da viagem sem apagar o registro. */
     fun removeSpotFromTrip(spotId: Long) {
-        viewModelScope.launch {
-            tripRepository.assignSpotToTrip(spotId, null)
-        }
+        viewModelScope.launch { tripRepository.assignSpotToTrip(spotId, null) }
     }
 
     fun deleteSpot(spotId: Long) {
-        viewModelScope.launch {
-            spotRepository.deleteSpot(spotId)
-        }
+        viewModelScope.launch { spotRepository.deleteSpot(spotId) }
     }
 }

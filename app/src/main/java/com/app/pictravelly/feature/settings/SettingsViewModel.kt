@@ -6,7 +6,6 @@ import com.app.pictravelly.core.data.SettingsRepository
 import com.app.pictravelly.core.database.model.settings.AppLanguage
 import com.app.pictravelly.core.database.model.settings.AppTheme
 import com.app.pictravelly.core.database.model.settings.MapEngineType
-import com.app.pictravelly.core.map.MapConfig
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -16,7 +15,7 @@ import kotlinx.coroutines.launch
 data class SettingsUiState(
     val selectedTheme: AppTheme = AppTheme.SYSTEM,
     val selectedLanguage: AppLanguage = AppLanguage.PT_BR,
-    val selectedMapEngine: MapEngineType = MapConfig.activeEngine // TODO: Migrar para DataStore
+    val selectedMapEngine: MapEngineType = MapEngineType.OSM
 )
 
 class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(

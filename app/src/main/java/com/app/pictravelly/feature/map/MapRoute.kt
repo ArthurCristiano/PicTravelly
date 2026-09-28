@@ -1,7 +1,6 @@
-package com.app.pictravelly.feature.home
+package com.app.pictravelly.feature.map
 
 import android.Manifest
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,14 +13,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.app.pictravelly.core.location.LocationHelper
+import com.app.pictravelly.core.location.LocationHelper.getCurrentLocation
 import kotlinx.coroutines.launch
 
+/**
+ * ROTA: Responsável apenas pelas integrações com o SO (Permissões, GPS, ViewModel).
+ */
 @Composable
-fun HomeRoute(
-    viewModel: HomeViewModel,
-    onNavigateToDetail: (Long) -> Unit,
-    onNavigateToSpots: () -> Unit,
-    onNavigateToCreate: () -> Unit,
+fun MapRoute(
+    viewModel: MapViewModel,
+    onNavigateToSpotDetail: (Long) -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
@@ -29,12 +30,6 @@ fun HomeRoute(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    // Delegação do botão voltar do hardware
-    BackHandler(enabled = uiState.isMapExpanded) {
-        viewModel.setMapExpanded(false)
-    }
-
-    // Permissões do Android
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -42,7 +37,7 @@ fun HomeRoute(
                 permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         if (granted) {
             coroutineScope.launch {
-                val (lat, lng) = LocationHelper.getCurrentLocation(context)
+                val (lat, lng) = getCurrentLocation(context)
                 viewModel.updateCurrentLocation(lat, lng)
             }
         }
@@ -50,7 +45,7 @@ fun HomeRoute(
 
     LaunchedEffect(Unit) {
         if (LocationHelper.hasLocationPermission(context)) {
-            val (lat, lng) = LocationHelper.getCurrentLocation(context)
+            val (lat, lng) = getCurrentLocation(context)
             viewModel.updateCurrentLocation(lat, lng)
         } else {
             permissionLauncher.launch(
@@ -62,15 +57,14 @@ fun HomeRoute(
         }
     }
 
-    HomeScreen(
+    // Delega os dados puros para a tela visual
+    MapScreen(
         uiState = uiState,
         contentPadding = contentPadding,
-        onMapExpandedChange = viewModel::setMapExpanded,
-        onSpotSelect = viewModel::selectSpot,
-        onNavigateToDetail = onNavigateToDetail,
-        onNavigateToSpots = onNavigateToSpots,
-        onNavigateToCreate = onNavigateToCreate,
-        modifier = modifier,
-        onZoomChange = viewModel::updateZoom
+        onCloseSelection = viewModel::clearSelection,
+        onMarkerClick = { marker -> viewModel.selectSpotById(marker.id) },
+        onZoomChange = viewModel::updateZoom,
+        onNavigateToSpotDetail = onNavigateToSpotDetail,
+        modifier = modifier
     )
 }

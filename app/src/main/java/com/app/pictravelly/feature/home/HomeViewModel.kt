@@ -2,7 +2,9 @@ package com.app.pictravelly.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.app.pictravelly.core.data.SettingsRepository
 import com.app.pictravelly.core.data.TouristSpotRepository
+import com.app.pictravelly.core.database.model.settings.MapEngineType
 import com.app.pictravelly.core.database.model.touristSpot.TouristSpotWithImages
 import com.app.pictravelly.core.location.LocationHelper
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
  * Estado dinâmico provisório (Ações do usuário na tela).
@@ -29,7 +32,9 @@ data class HomeUiState(
     val selectedSpot: TouristSpotWithImages? = null,
     val currentLatitude: Double = LocationHelper.DEFAULT_LATITUDE,
     val currentLongitude: Double = LocationHelper.DEFAULT_LONGITUDE,
-    val isLoadingLocation: Boolean = true
+    val isLoadingLocation: Boolean = true,
+    val mapEngine: MapEngineType = MapEngineType.OSM,
+    val mapZoom: Float = 13f
 ) {
     val totalSpotsCount: Int get() = spots.size
 
@@ -55,29 +60,31 @@ data class HomeUiState(
 }
 
 class HomeViewModel(
-    repository: TouristSpotRepository
+    touristSpotRepository: TouristSpotRepository,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
-    // Guarda apenas os estados transitórios (cliques, expansões e GPS)
     private val _transientState = MutableStateFlow(HomeTransientState())
 
-    // A Mágica: Funde o banco de dados e os estados transitórios automaticamente.
     val uiState: StateFlow<HomeUiState> = combine(
-        repository.getAllSpotsStream(),
+        touristSpotRepository.getAllSpotsStream(),
+        settingsRepository.userDataStream,
         _transientState
-    ) { spotsList, transient ->
+    ) { spotsList, settings, transient ->
         HomeUiState(
             spots = spotsList,
             isMapExpanded = transient.isMapExpanded,
             selectedSpot = transient.selectedSpot,
             currentLatitude = transient.currentLatitude,
             currentLongitude = transient.currentLongitude,
-            isLoadingLocation = transient.isLoadingLocation
+            isLoadingLocation = transient.isLoadingLocation,
+            mapEngine = settings.mapEngine,
+            mapZoom = settings.lastZoom
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = HomeUiState() // Estado inicial vazio
+        initialValue = HomeUiState()
     )
 
     fun updateCurrentLocation(lat: Double, lng: Double) {
@@ -92,5 +99,11 @@ class HomeViewModel(
 
     fun selectSpot(spot: TouristSpotWithImages?) {
         _transientState.update { it.copy(selectedSpot = spot) }
+    }
+
+    fun updateZoom(newZoom: Float) {
+        viewModelScope.launch {
+            settingsRepository.setLastZoom(newZoom)
+        }
     }
 }

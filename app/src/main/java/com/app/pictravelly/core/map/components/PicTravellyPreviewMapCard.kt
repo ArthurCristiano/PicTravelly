@@ -21,41 +21,34 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.app.pictravelly.core.database.model.touristSpot.TouristSpotWithImages
+import com.app.pictravelly.core.database.model.settings.MapEngineType
 import com.app.pictravelly.core.design.components.PicTravellyCard
+import com.app.pictravelly.core.design.theme.PicTravellyTheme
 import com.app.pictravelly.core.map.MapMarkerData
 import com.app.pictravelly.core.map.PicTravellyMap
-import com.app.pictravelly.feature.home.HomeUiState
-
 
 /**
- * Card contendo o Google Map recolhido, com pins e centrado na localização atual.
+ * Card de mapa genérico reutilizável em todo o aplicativo.
+ * A persistência do zoom e a escolha da engine são tratadas internamente pelo PicTravellyMap caso não fornecidas.
+STATELESS: Recebe engine e zoom estritamente da tela que o hospeda.
  */
 @Composable
-fun HomeMapCard(
-    uiState: HomeUiState,
+fun PicTravellyPreviewMapCard(
+    currentLatitude: Double,
+    currentLongitude: Double,
+    engine: MapEngineType,
+    zoom: Float,
+    markers: List<MapMarkerData>,
     onExpandClick: () -> Unit,
-    onSpotSelect: (TouristSpotWithImages) -> Unit,
+    onMarkerSelect: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val markers = remember(uiState.spots) {
-        uiState.spots.map { spotWithImages ->
-            MapMarkerData(
-                id = spotWithImages.spot.id,
-                title = spotWithImages.spot.title,
-                snippet = spotWithImages.spot.locationName,
-                latitude = spotWithImages.spot.latitude,
-                longitude = spotWithImages.spot.longitude
-            )
-        }
-    }
-
     PicTravellyCard(
         modifier = modifier
             .fillMaxWidth()
@@ -64,20 +57,20 @@ fun HomeMapCard(
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             PicTravellyMap(
-                latitude = uiState.currentLatitude,
-                longitude = uiState.currentLongitude,
-                zoom = 12.0,
+                latitude = currentLatitude,
+                longitude = currentLongitude,
+                zoom = zoom,
+                engine = engine,
                 markers = markers,
                 onMarkerClick = { marker ->
-                    val selected = uiState.spots.firstOrNull { it.spot.id == marker.id }
-                    if (selected != null) onSpotSelect(selected)
+                    onMarkerSelect(marker.id)
                 },
                 modifier = Modifier.fillMaxSize(),
-                isInteractive = false,
+                isInteractive = false, // CORREÇÃO: Miniaturas em listas NUNCA devem roubar o scroll da tela principal
                 onMapClick = onExpandClick
             )
 
-            // Botão One UI flutuante de expandir no canto superior direito
+            // Botão de expandir no topo direito
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
@@ -95,7 +88,7 @@ fun HomeMapCard(
                 }
             }
 
-            // Tag indicativa inferior
+            // Tag de exploração inferior
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -120,5 +113,31 @@ fun HomeMapCard(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PicTravellyPreviewMapCardPreview() {
+    PicTravellyTheme {
+        val sampleMarkers = listOf(
+            MapMarkerData(
+                id = 1L,
+                title = "Ponto Turístico Central",
+                snippet = "Um belo lugar para visitar",
+                latitude = -23.55052,
+                longitude = -46.633308
+            )
+        )
+        PicTravellyPreviewMapCard(
+            currentLatitude = -23.55052,
+            currentLongitude = -46.633308,
+            engine = MapEngineType.OSM, // Mock obrigatório para o Preview
+            zoom = 14f,                 // Mock obrigatório para o Preview
+            markers = sampleMarkers,
+            onExpandClick = {},
+            onMarkerSelect = {},
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }

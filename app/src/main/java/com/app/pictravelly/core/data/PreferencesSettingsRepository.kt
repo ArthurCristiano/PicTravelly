@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.app.pictravelly.core.database.model.settings.AppLanguage
 import com.app.pictravelly.core.database.model.settings.AppTheme
@@ -23,6 +24,7 @@ class PreferencesSettingsRepository(
         val THEME_PREFERENCE = stringPreferencesKey("theme_preference")
         val LANGUAGE_PREFERENCE = stringPreferencesKey("language_preference")
         val MAP_ENGINE_PREFERENCE = stringPreferencesKey("map_engine_preference")
+        val LAST_ZOOM_PREFERENCE = floatPreferencesKey("last_zoom_preference")
     }
 
     override val userDataStream: Flow<UserSettings> = dataStore.data
@@ -35,8 +37,6 @@ class PreferencesSettingsRepository(
             }
         }
         .map { preferences ->
-            // Lê do disco em String, tenta converter para o Enum.
-            // Se falhar (ex: chave não existe), aplica o valor padrão.
             val theme = runCatching { AppTheme.valueOf(preferences[Keys.THEME_PREFERENCE] ?: "") }
                 .getOrDefault(AppTheme.SYSTEM)
 
@@ -46,9 +46,11 @@ class PreferencesSettingsRepository(
 
             val mapEngine =
                 runCatching { MapEngineType.valueOf(preferences[Keys.MAP_ENGINE_PREFERENCE] ?: "") }
-                    .getOrDefault(MapEngineType.OSM) // O seu Enum padrão real
+                    .getOrDefault(MapEngineType.OSM)
 
-            UserSettings(theme, language, mapEngine)
+            val lastZoom = preferences[Keys.LAST_ZOOM_PREFERENCE] ?: 13f
+
+            UserSettings(theme, language, mapEngine, lastZoom)
         }
 
     override suspend fun setTheme(theme: AppTheme) {
@@ -66,6 +68,12 @@ class PreferencesSettingsRepository(
     override suspend fun setMapEngine(engine: MapEngineType) {
         dataStore.edit { preferences ->
             preferences[Keys.MAP_ENGINE_PREFERENCE] = engine.name
+        }
+    }
+
+    override suspend fun setLastZoom(zoom: Float) {
+        dataStore.edit { preferences ->
+            preferences[Keys.LAST_ZOOM_PREFERENCE] = zoom
         }
     }
 }

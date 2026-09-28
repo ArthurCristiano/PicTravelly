@@ -11,4 +11,5 @@ interface SettingsRepository {
     suspend fun setTheme(theme: AppTheme)
     suspend fun setLanguage(language: AppLanguage)
     suspend fun setMapEngine(engine: MapEngineType)
+    suspend fun setLastZoom(zoom: Float)
 }

@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.app.pictravelly.MainActivityViewModel
 import com.app.pictravelly.PicTravellyApp
+import com.app.pictravelly.core.data.SettingsRepository
 import com.app.pictravelly.core.data.TouristSpotRepository
 import com.app.pictravelly.core.data.TripRepository
 import com.app.pictravelly.feature.home.HomeViewModel
@@ -28,7 +29,8 @@ object AppViewModelProvider {
         // Inicializador do HomeViewModel
         initializer {
             HomeViewModel(
-                repository = picTravellyApplication().container.touristSpotRepository
+                touristSpotRepository = picTravellyApplication().container.touristSpotRepository,
+                settingsRepository = picTravellyApplication().container.settingsRepository
             )
         }
 
@@ -49,7 +51,8 @@ object AppViewModelProvider {
         // Inicializador do MapViewModel (aba Mapa)
         initializer {
             MapViewModel(
-                repository = picTravellyApplication().container.touristSpotRepository
+                touristSpotRepository = picTravellyApplication().container.touristSpotRepository,
+                settingsRepository = picTravellyApplication().container.settingsRepository
             )
         }
 
@@ -73,12 +76,20 @@ object AppViewModelProvider {
      */
     fun createSpotDetailFactory(
         spotId: Long,
-        repository: TouristSpotRepository
+        spotRepository: TouristSpotRepository,
+        settingsRepository: SettingsRepository
     ): ViewModelProvider.Factory {
         return object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return SpotDetailViewModel(repository, spotId) as T
+                if (modelClass.isAssignableFrom(SpotDetailViewModel::class.java)) {
+                    return SpotDetailViewModel(
+                        touristSpotRepository = spotRepository,
+                        settingsRepository = settingsRepository,
+                        spotId = spotId
+                    ) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
             }
         }
     }
@@ -95,7 +106,14 @@ object AppViewModelProvider {
         return object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return TripDetailViewModel(tripRepository, spotRepository, tripId) as T
+                if (modelClass.isAssignableFrom(TripDetailViewModel::class.java)) {
+                    return TripDetailViewModel(
+                        tripRepository = tripRepository,
+                        spotRepository = spotRepository,
+                        tripId = tripId
+                    ) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
             }
         }
     }
@@ -110,24 +128,39 @@ object AppViewModelProvider {
         return object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return TripFormViewModel(tripRepository, tripId) as T
+                if (modelClass.isAssignableFrom(TripFormViewModel::class.java)) {
+                    return TripFormViewModel(
+                        repository = tripRepository,
+                        tripId = tripId
+                    ) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
             }
         }
     }
 
     /**
-     * Factory do formulário de ponto turístico. O tripId vem da rota quando o
-     * cadastro é aberto de dentro de uma viagem.
+     * Factory do formulário de ponto turístico.
+     * Exige o SettingsRepository para o controle do mapa interno do formulário.
      */
     fun createSpotFormFactory(
         tripId: Long,
         spotRepository: TouristSpotRepository,
-        tripRepository: TripRepository
+        tripRepository: TripRepository,
+        settingsRepository: SettingsRepository
     ): ViewModelProvider.Factory {
         return object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return SpotFormViewModel(spotRepository, tripRepository, tripId) as T
+                if (modelClass.isAssignableFrom(SpotFormViewModel::class.java)) {
+                    return SpotFormViewModel(
+                        repository = spotRepository,
+                        tripRepository = tripRepository,
+                        settingsRepository = settingsRepository,
+                        initialTripId = tripId
+                    ) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
             }
         }
     }
