@@ -22,6 +22,6 @@ fun SettingsRoute(
         modifier = modifier,
         onThemeChange = viewModel::setTheme,
         onMapEngineChange = viewModel::setMapEngine,
-        onLanguageChange = viewModel::setLanguage
+        onMapTypeChange = viewModel::setMapType
     )
 }

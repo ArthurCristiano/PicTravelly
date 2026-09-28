@@ -3,7 +3,7 @@ package com.app.pictravelly.feature.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.pictravelly.core.data.SettingsRepository
-import com.app.pictravelly.core.database.model.settings.AppLanguage
+import com.app.pictravelly.core.database.model.settings.GoogleMapType
 import com.app.pictravelly.core.database.model.settings.AppTheme
 import com.app.pictravelly.core.database.model.settings.MapEngineType
 import kotlinx.coroutines.flow.SharingStarted
@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 
 data class SettingsUiState(
     val selectedTheme: AppTheme = AppTheme.SYSTEM,
-    val selectedLanguage: AppLanguage = AppLanguage.PT_BR,
+    val selectedGoogleMapType: GoogleMapType = GoogleMapType.NORMAL,
     val selectedMapEngine: MapEngineType = MapEngineType.OSM
 )
 
@@ -27,7 +27,7 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
         repository.userDataStream.map { userSettings ->
             SettingsUiState(
                 selectedTheme = userSettings.theme,
-                selectedLanguage = userSettings.language,
+                selectedGoogleMapType = userSettings.googleMapType,
                 selectedMapEngine = userSettings.mapEngine
             )
         }.stateIn(
@@ -40,8 +40,8 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
         repository.setTheme(theme)
     }
 
-    fun setLanguage(language: AppLanguage) = viewModelScope.launch {
-        repository.setLanguage(language)
+    fun setMapType(googleMapType: GoogleMapType) = viewModelScope.launch {
+        repository.setMapType(googleMapType)
     }
 
     fun setMapEngine(engine: MapEngineType) = viewModelScope.launch {

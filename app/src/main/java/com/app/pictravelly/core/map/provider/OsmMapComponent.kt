@@ -12,12 +12,14 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.app.pictravelly.core.database.model.settings.GoogleMapType
 import com.app.pictravelly.core.map.MapMarkerData
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
 import org.osmdroid.events.ZoomEvent
+import org.osmdroid.tileprovider.tilesource.ITileSource
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -37,7 +39,9 @@ fun OsmMapComponent(
     isInteractive: Boolean = true,
     onMapClick: (() -> Unit)? = null,
     onLocationPick: ((Double, Double) -> Unit)? = null,
-    onZoomChange: ((Float) -> Unit)? = null
+    onZoomChange: ((Float) -> Unit)? = null,
+    googleMapType: GoogleMapType = GoogleMapType.NORMAL,
+    centerTrigger: Int = 0
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -54,9 +58,15 @@ fun OsmMapComponent(
 
     val markerFolder = remember { FolderOverlay() }
 
+    // Mapeamento das camadas visuais (Tile Sources) para o OSM
+    val tileSource: ITileSource = when (googleMapType) {
+        GoogleMapType.NORMAL -> TileSourceFactory.MAPNIK
+        GoogleMapType.SATELLITE, GoogleMapType.HYBRID -> TileSourceFactory.USGS_SAT
+    }
+
     val mapView = remember {
         MapView(context).apply {
-            setTileSource(TileSourceFactory.MAPNIK)
+            setTileSource(tileSource)
             setBuiltInZoomControls(false)
             setMultiTouchControls(true)
 
@@ -75,8 +85,6 @@ fun OsmMapComponent(
             overlays.add(MapEventsOverlay(eventsReceiver))
             overlays.add(markerFolder)
 
-            // CORREÇÃO: Dispara a alteração de zoom apenas quando o gesto estabiliza ou via botões,
-            // evitando spam excessivo na thread principal durante a pinça.
             addMapListener(object : MapListener {
                 override fun onScroll(event: ScrollEvent?): Boolean = false
                 override fun onZoom(event: ZoomEvent?): Boolean {
@@ -89,7 +97,6 @@ fun OsmMapComponent(
         }
     }
 
-    // Controle inteligente da Câmera (Posição) - só move se não estiver processando gestos de toque
     LaunchedEffect(latitude, longitude) {
         val currentCenter = mapView.mapCenter
         val latDiff = abs(currentCenter.latitude - latitude)
@@ -100,12 +107,15 @@ fun OsmMapComponent(
         }
     }
 
-    // CORREÇÃO PARA A PINÇA: Só altera o zoom por código se houver discrepância real
-    // e o mapa não estiver executando animações de toque ativas.
     LaunchedEffect(zoom) {
         if (abs(mapView.zoomLevelDouble - zoom.toDouble()) > 0.01) {
             mapView.controller.setZoom(zoom.toDouble())
         }
+    }
+
+    // Dispara a animação sempre que mudar lat/long OU o gatilho do botão for acionado
+    LaunchedEffect(latitude, longitude, centerTrigger) {
+        mapView.controller.animateTo(GeoPoint(latitude, longitude))
     }
 
     DisposableEffect(lifecycleOwner) {
@@ -127,6 +137,11 @@ fun OsmMapComponent(
         factory = { mapView },
         modifier = modifier,
         update = { map ->
+            // Atualiza a fonte do tile se o usuário mudou a configuração nas preferências
+            if (map.tileProvider.tileSource.name() != tileSource.name()) {
+                map.setTileSource(tileSource)
+            }
+
             map.setMultiTouchControls(isInteractive)
 
             markerFolder.items.clear()

@@ -6,11 +6,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import com.app.pictravelly.core.database.model.settings.GoogleMapType
 import com.app.pictravelly.core.map.MapMarkerData
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
@@ -32,7 +35,9 @@ fun GoogleMapComponent(
     isInteractive: Boolean = true,
     onMapClick: (() -> Unit)? = null,
     onLocationPick: ((Double, Double) -> Unit)? = null,
-    onZoomChange: ((Float) -> Unit)? = null
+    onZoomChange: ((Float) -> Unit)? = null,
+    googleMapType: GoogleMapType = GoogleMapType.NORMAL,
+    centerTrigger: Int = 0,
 ) {
     val currentOnMapClick by rememberUpdatedState(onMapClick)
     val currentOnLocationPick by rememberUpdatedState(onLocationPick)
@@ -66,6 +71,26 @@ fun GoogleMapComponent(
         }
     }
 
+    // LANNED EFFECT ATUALIZADO: Dispara tanto se mudar as coordenadas NORMAIS
+    // quanto se o usuário clicar no botão de centralizar (centerTrigger muda).
+    LaunchedEffect(latitude, longitude, centerTrigger) {
+        if (!cameraPositionState.isMoving) {
+            cameraPositionState.animate(
+                CameraUpdateFactory.newLatLngZoom(
+                    LatLng(latitude, longitude),
+                    cameraPositionState.position.zoom
+                )
+            )
+        }
+    }
+
+    // Mapeia o seu Enum customizado para o MapType oficial do Google Maps Compose
+    val sdkGoogleMapType: MapType = when (googleMapType) {
+        GoogleMapType.NORMAL -> MapType.NORMAL
+        GoogleMapType.SATELLITE -> MapType.SATELLITE
+        GoogleMapType.HYBRID -> MapType.HYBRID
+    }
+
     GoogleMap(
         modifier = modifier,
         cameraPositionState = cameraPositionState,
@@ -79,7 +104,10 @@ fun GoogleMapComponent(
         onMapClick = { latLng ->
             currentOnMapClick?.invoke()
             currentOnLocationPick?.invoke(latLng.latitude, latLng.longitude)
-        }
+        },
+        properties = MapProperties(
+            mapType = sdkGoogleMapType, // <--- APLICA O TIPO DO MAPA AQUI
+        ),
     ) {
         markers.forEach { markerData ->
             Marker(

@@ -12,18 +12,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Preview
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.app.pictravelly.core.database.model.settings.AppLanguage
+import com.app.pictravelly.core.database.model.settings.GoogleMapType
 import com.app.pictravelly.core.database.model.settings.AppTheme
 import com.app.pictravelly.core.design.components.PicTravellyTitle
 import com.app.pictravelly.core.database.model.settings.MapEngineType
+import com.app.pictravelly.core.design.theme.PicTravellyTheme
 import com.app.pictravelly.feature.settings.components.SettingsAboutCard
 import com.app.pictravelly.feature.settings.components.SettingsRadioRow
 import com.app.pictravelly.feature.settings.components.SettingsSection
@@ -34,7 +35,7 @@ fun SettingsScreen(
     contentPadding: PaddingValues,
     onThemeChange: (AppTheme) -> Unit,
     onMapEngineChange: (MapEngineType) -> Unit,
-    onLanguageChange: (AppLanguage) -> Unit,
+    onMapTypeChange: (GoogleMapType) -> Unit,
     modifier: Modifier = Modifier
 ) {
     // ============================================================================
@@ -78,18 +79,18 @@ fun SettingsScreen(
             }
         }
 
-        // Seção: Idioma
-        SettingsSection(title = "Idioma da Interface", icon = Icons.Default.Language) {
-            AppLanguage.entries.forEach { lang ->
-                val visualLabel = when (lang) {
-                    AppLanguage.PT_BR -> "Português (Brasil)"
-                    AppLanguage.EN -> "English (US)"
-                    AppLanguage.ES -> "Español"
+        // Seção: Tipos de Mapa
+        SettingsSection(title = "Tipo de mapa", icon = Icons.Default.Preview) {
+            GoogleMapType.entries.forEach { type ->
+                val visualLabel = when (type) {
+                    GoogleMapType.NORMAL -> "Padrão"
+                    GoogleMapType.SATELLITE -> "Satélite"
+                    GoogleMapType.HYBRID -> "Híbrido"
                 }
                 SettingsRadioRow(
                     label = visualLabel,
-                    isSelected = uiState.selectedLanguage == lang,
-                    onClick = { onLanguageChange(lang) })
+                    isSelected = uiState.selectedGoogleMapType == type,
+                    onClick = { onMapTypeChange(type) })
             }
         }
 
@@ -111,18 +112,18 @@ fun SettingsScreen(
 @Composable
 private fun SettingsScreenPreview() {
     // 1. Envolve o Preview com o Design System do seu app
-    MaterialTheme { // Substitua por PicTravellyTheme { se existir
+    PicTravellyTheme { // Substitua por PicTravellyTheme { se existir
         SettingsScreen(
             uiState = SettingsUiState(
                 selectedTheme = AppTheme.SYSTEM,
-                selectedLanguage = AppLanguage.PT_BR,
+                selectedGoogleMapType = GoogleMapType.NORMAL,
                 // Assumindo que a Engine padrão seja instanciável diretamente
                 selectedMapEngine = MapEngineType.entries.first()
             ),
             contentPadding = PaddingValues(0.dp),
             onThemeChange = {},
             onMapEngineChange = {},
-            onLanguageChange = {}
+            onMapTypeChange = {}
         )
     }
 }

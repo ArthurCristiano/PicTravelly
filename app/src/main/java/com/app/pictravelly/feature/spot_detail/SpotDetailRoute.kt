@@ -34,6 +34,8 @@ fun SpotDetailRoute(
         onDeleteDismiss = { showDeleteDialog = false },
         onMapExpandedChange = { isMapExpanded = it },
         onZoomChange = viewModel::updateZoom, // Presume que isso foi adicionado na ViewModel
+        onEngineChange = viewModel::updateMapEngine,
+        onMapTypeChange = viewModel::updateGoogleMapType,
         modifier = modifier
     )
 }

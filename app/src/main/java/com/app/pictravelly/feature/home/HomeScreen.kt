@@ -7,7 +7,19 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -29,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.app.pictravelly.core.database.model.settings.GoogleMapType
 import com.app.pictravelly.core.database.model.settings.MapEngineType
 import com.app.pictravelly.core.database.model.touristSpot.TouristSpotWithImages
 import com.app.pictravelly.core.design.components.PicTravellyButton
@@ -36,7 +49,10 @@ import com.app.pictravelly.core.design.theme.PicTravellyTheme
 import com.app.pictravelly.core.map.MapMarkerData
 import com.app.pictravelly.core.map.components.PicTravellyExpandedMapView
 import com.app.pictravelly.core.map.components.PicTravellyPreviewMapCard
-import com.app.pictravelly.feature.home.components.*
+import com.app.pictravelly.feature.home.components.HomeGamificationCard
+import com.app.pictravelly.feature.home.components.HomeHeaderSection
+import com.app.pictravelly.feature.home.components.HomeNewEntryActionCard
+import com.app.pictravelly.feature.home.components.RecentMemoriesSection
 
 @Composable
 fun HomeScreen(
@@ -48,6 +64,8 @@ fun HomeScreen(
     onNavigateToSpots: () -> Unit,
     onNavigateToCreate: () -> Unit,
     onZoomChange: (Float) -> Unit,
+    onEngineChange: (MapEngineType) -> Unit,
+    onMapTypeChange: (GoogleMapType) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val markersForMap = remember(uiState.spots) {
@@ -101,6 +119,7 @@ fun HomeScreen(
                     markers = markersForMap,
                     engine = uiState.mapEngine,
                     zoom = uiState.mapZoom,
+                    googleMapType = uiState.googleMapType,
                     onExpandClick = { onMapExpandedChange(true) },
                     onMarkerSelect = { markerId ->
                         val selected = uiState.spots.firstOrNull { it.spot.id == markerId }
@@ -139,6 +158,7 @@ fun HomeScreen(
                 markers = markersForMap,
                 onClose = { onMapExpandedChange(false) },
                 onZoomChange = onZoomChange, // Repassa a interação para a rota/viewmodel
+                googleMapType = uiState.googleMapType,
                 onMarkerClick = { marker ->
                     val selected = uiState.spots.firstOrNull { it.spot.id == marker.id }
                     if (selected != null) onSpotSelect(selected)
@@ -150,7 +170,9 @@ fun HomeScreen(
                         onNavigateToDetail = onNavigateToDetail,
                         modifier = Modifier.align(Alignment.BottomCenter)
                     )
-                }
+                },
+                onEngineChange = onEngineChange,
+                onMapTypeChange = onMapTypeChange,
             )
         }
     }
@@ -250,6 +272,8 @@ private fun HomeScreenPreview() {
             onNavigateToDetail = {},
             onNavigateToSpots = {},
             onNavigateToCreate = {},
+            onMapTypeChange = {},
+            onEngineChange = {},
             onZoomChange = {}
         )
     }

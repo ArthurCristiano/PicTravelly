@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.pictravelly.core.data.SettingsRepository
 import com.app.pictravelly.core.data.TouristSpotRepository
+import com.app.pictravelly.core.database.model.settings.GoogleMapType
 import com.app.pictravelly.core.database.model.settings.MapEngineType
 import com.app.pictravelly.core.database.model.touristSpot.TouristSpotWithImages
 import com.app.pictravelly.core.location.LocationHelper
@@ -20,7 +21,8 @@ private data class HomeTransientState(
     val selectedSpot: TouristSpotWithImages? = null,
     val currentLatitude: Double = LocationHelper.DEFAULT_LATITUDE,
     val currentLongitude: Double = LocationHelper.DEFAULT_LONGITUDE,
-    val isLoadingLocation: Boolean = true
+    val isLoadingLocation: Boolean = true,
+    val centerTrigger: Int = 0
 )
 
 data class HomeUiState(
@@ -32,6 +34,7 @@ data class HomeUiState(
     val isLoadingLocation: Boolean = true,
     val mapEngine: MapEngineType = MapEngineType.OSM,
     val mapZoom: Float = 13f,
+    val googleMapType: GoogleMapType = GoogleMapType.NORMAL,
     val isLoadingSettings: Boolean = true // <--- ADICIONADO: Controla se o DataStore já respondeu
 ) {
     val totalSpotsCount: Int get() = spots.size
@@ -79,6 +82,7 @@ class HomeViewModel(
             // Se 'settings' veio do DataStore, usamos ele. Se for null, mantemos o fallback mas marcamos como carregado se necessário.
             mapEngine = settings?.mapEngine ?: MapEngineType.OSM,
             mapZoom = settings?.lastZoom ?: 13f,
+            googleMapType = settings?.googleMapType ?: GoogleMapType.NORMAL,
             isLoadingSettings = false // <--- ADICIONADO: Assim que o combine roda pela 1ª vez com o DataStore, fica false!
         )
     }.stateIn(
@@ -106,4 +110,17 @@ class HomeViewModel(
             settingsRepository.setLastZoom(newZoom)
         }
     }
+
+    fun updateMapEngine(newEngine: MapEngineType) {
+        viewModelScope.launch {
+            settingsRepository.setMapEngine(newEngine)
+        }
+    }
+
+    fun updateGoogleMapType(newMapType: GoogleMapType) {
+        viewModelScope.launch {
+            settingsRepository.setMapType(newMapType)
+        }
+    }
+
 }

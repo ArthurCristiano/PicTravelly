@@ -27,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.app.pictravelly.core.database.model.settings.GoogleMapType
 import com.app.pictravelly.core.database.model.settings.MapEngineType
 import com.app.pictravelly.core.design.components.PicTravellyCard
 import com.app.pictravelly.core.design.theme.PicTravellyTheme
@@ -44,6 +45,7 @@ fun PicTravellyPreviewMapCard(
     currentLongitude: Double,
     engine: MapEngineType,
     zoom: Float,
+    googleMapType: GoogleMapType,
     markers: List<MapMarkerData>,
     onExpandClick: () -> Unit,
     onMarkerSelect: (Long) -> Unit,
@@ -67,7 +69,8 @@ fun PicTravellyPreviewMapCard(
                 },
                 modifier = Modifier.fillMaxSize(),
                 isInteractive = false, // CORREÇÃO: Miniaturas em listas NUNCA devem roubar o scroll da tela principal
-                onMapClick = onExpandClick
+                onMapClick = onExpandClick,
+                googleMapType = googleMapType
             )
 
             // Botão de expandir no topo direito
@@ -137,7 +140,8 @@ private fun PicTravellyPreviewMapCardPreview() {
             markers = sampleMarkers,
             onExpandClick = {},
             onMarkerSelect = {},
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp),
+            googleMapType = GoogleMapType.NORMAL
         )
     }
 }

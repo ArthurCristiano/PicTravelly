@@ -7,7 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.app.pictravelly.core.database.model.settings.AppLanguage
+import com.app.pictravelly.core.database.model.settings.GoogleMapType
 import com.app.pictravelly.core.database.model.settings.AppTheme
 import com.app.pictravelly.core.database.model.settings.MapEngineType
 import com.app.pictravelly.core.database.model.settings.UserSettings
@@ -22,7 +22,7 @@ class PreferencesSettingsRepository(
 
     private object Keys {
         val THEME_PREFERENCE = stringPreferencesKey("theme_preference")
-        val LANGUAGE_PREFERENCE = stringPreferencesKey("language_preference")
+        val MAP_TYPE_PREFERENCE = stringPreferencesKey("map_type_preference")
         val MAP_ENGINE_PREFERENCE = stringPreferencesKey("map_engine_preference")
         val LAST_ZOOM_PREFERENCE = floatPreferencesKey("last_zoom_preference")
     }
@@ -40,9 +40,9 @@ class PreferencesSettingsRepository(
             val theme = runCatching { AppTheme.valueOf(preferences[Keys.THEME_PREFERENCE] ?: "") }
                 .getOrDefault(AppTheme.SYSTEM)
 
-            val language =
-                runCatching { AppLanguage.valueOf(preferences[Keys.LANGUAGE_PREFERENCE] ?: "") }
-                    .getOrDefault(AppLanguage.PT_BR)
+            val googleMapType =
+                runCatching { GoogleMapType.valueOf(preferences[Keys.MAP_TYPE_PREFERENCE] ?: "") }
+                    .getOrDefault(GoogleMapType.NORMAL)
 
             val mapEngine =
                 runCatching { MapEngineType.valueOf(preferences[Keys.MAP_ENGINE_PREFERENCE] ?: "") }
@@ -50,7 +50,7 @@ class PreferencesSettingsRepository(
 
             val lastZoom = preferences[Keys.LAST_ZOOM_PREFERENCE] ?: 13f
 
-            UserSettings(theme, language, mapEngine, lastZoom)
+            UserSettings(theme, googleMapType, mapEngine, lastZoom)
         }
 
     override suspend fun setTheme(theme: AppTheme) {
@@ -59,9 +59,9 @@ class PreferencesSettingsRepository(
         }
     }
 
-    override suspend fun setLanguage(language: AppLanguage) {
+    override suspend fun setMapType(googleMapType: GoogleMapType) {
         dataStore.edit { preferences ->
-            preferences[Keys.LANGUAGE_PREFERENCE] = language.name
+            preferences[Keys.MAP_TYPE_PREFERENCE] = googleMapType.name
         }
     }
 

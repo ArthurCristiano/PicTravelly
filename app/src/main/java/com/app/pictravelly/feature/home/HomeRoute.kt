@@ -71,6 +71,8 @@ fun HomeRoute(
         onNavigateToSpots = onNavigateToSpots,
         onNavigateToCreate = onNavigateToCreate,
         modifier = modifier,
-        onZoomChange = viewModel::updateZoom
+        onZoomChange = viewModel::updateZoom,
+        onEngineChange = viewModel::updateMapEngine,
+        onMapTypeChange = viewModel::updateGoogleMapType
     )
 }

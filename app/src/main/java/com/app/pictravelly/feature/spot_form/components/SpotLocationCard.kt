@@ -117,7 +117,8 @@ fun SpotLocationCard(
                     onZoomChange = {
                         formMapZoom = it
                     }, // Atualiza o zoom local para os botões do mapa funcionarem
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    googleMapType = uiState.googleMapType
                 )
             }
 

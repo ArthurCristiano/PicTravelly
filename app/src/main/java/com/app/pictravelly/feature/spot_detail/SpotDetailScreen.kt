@@ -24,6 +24,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.app.pictravelly.core.database.model.settings.GoogleMapType
+import com.app.pictravelly.core.database.model.settings.MapEngineType
 import com.app.pictravelly.core.design.components.PicTravellyCard
 import com.app.pictravelly.core.design.components.PicTravellyText
 import com.app.pictravelly.core.design.components.PicTravellyTitle
@@ -51,6 +53,8 @@ fun SpotDetailScreen(
     onDeleteDismiss: () -> Unit,
     onMapExpandedChange: (Boolean) -> Unit,
     onZoomChange: (Float) -> Unit,
+    onEngineChange: (MapEngineType) -> Unit,
+    onMapTypeChange: (GoogleMapType) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (showDeleteDialog) {
@@ -219,6 +223,7 @@ fun SpotDetailScreen(
                         currentLongitude = spot.longitude,
                         engine = uiState.mapEngine,
                         zoom = uiState.mapZoom,
+                        googleMapType = uiState.googleMapType,
                         markers = singleMarker,
                         onExpandClick = { onMapExpandedChange(true) },
                         onMarkerSelect = { /* Ignorado na tela de detalhes */ }
@@ -271,17 +276,21 @@ fun SpotDetailScreen(
                 longitude = spot.longitude,
                 engine = uiState.mapEngine,
                 zoom = uiState.mapZoom,
+                googleMapType = uiState.googleMapType,
                 markers = singleMarker,
                 onClose = { onMapExpandedChange(false) },
                 onMarkerClick = { },
                 onZoomChange = onZoomChange,
-                // SLOT API: Card customizado para a tela de Detalhes (sem o botão inútil)
+                // SLOT API: Card customizado para a tela de Detalhes
                 bottomContent = {
                     DetailSpotFloatingCard(
                         selectedSpot = uiState.spotWithImages,
                         modifier = Modifier.align(Alignment.BottomCenter)
                     )
-                }
+                },
+                onEngineChange = onEngineChange,
+                onMapTypeChange = onMapTypeChange,
+                centerTrigger = uiState.centerTrigger
             )
         }
     }

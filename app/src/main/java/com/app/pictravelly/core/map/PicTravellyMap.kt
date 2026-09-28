@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.app.pictravelly.core.database.model.settings.MapEngineType
+import com.app.pictravelly.core.database.model.settings.GoogleMapType
 import com.app.pictravelly.core.map.provider.GoogleMapComponent
 import com.app.pictravelly.core.map.provider.OsmMapComponent
 import kotlin.math.roundToInt
@@ -45,7 +46,9 @@ fun PicTravellyMap(
     isInteractive: Boolean = true,
     onMapClick: (() -> Unit)? = null,
     onLocationPick: ((Double, Double) -> Unit)? = null,
-    onZoomChange: ((Float) -> Unit)? = null
+    onZoomChange: ((Float) -> Unit)? = null,
+    googleMapType: GoogleMapType,
+    centerTrigger: Int = 0
 ) {
     Box(modifier = modifier) {
         // Renderização do motor de mapa
@@ -61,7 +64,9 @@ fun PicTravellyMap(
                     isInteractive = isInteractive,
                     onMapClick = onMapClick,
                     onLocationPick = onLocationPick,
-                    onZoomChange = onZoomChange
+                    onZoomChange = onZoomChange,
+                    googleMapType = googleMapType,
+                    centerTrigger = centerTrigger
                 )
             }
 
@@ -76,7 +81,9 @@ fun PicTravellyMap(
                     isInteractive = isInteractive,
                     onMapClick = onMapClick,
                     onLocationPick = onLocationPick,
-                    onZoomChange = onZoomChange
+                    onZoomChange = onZoomChange,
+                    googleMapType = googleMapType,
+                    centerTrigger = centerTrigger
                 )
             }
         }

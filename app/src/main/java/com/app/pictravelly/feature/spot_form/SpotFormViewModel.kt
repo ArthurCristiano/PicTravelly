@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.app.pictravelly.core.data.SettingsRepository
 import com.app.pictravelly.core.data.TouristSpotRepository
 import com.app.pictravelly.core.data.TripRepository
+import com.app.pictravelly.core.database.model.settings.GoogleMapType
 import com.app.pictravelly.core.database.model.settings.MapEngineType
 import com.app.pictravelly.core.database.model.touristSpot.SpotImageEntity
 import com.app.pictravelly.core.database.model.touristSpot.TouristSpotEntity
@@ -50,7 +51,8 @@ data class SpotFormUiState(
     val isUsingFallbackLocation: Boolean = true,
     val isSaving: Boolean = false,
     val errorMessage: String? = null,
-    val mapEngine: MapEngineType = MapEngineType.OSM
+    val mapEngine: MapEngineType = MapEngineType.OSM,
+    val googleMapType: GoogleMapType = GoogleMapType.NORMAL
 ) {
     val isValid: Boolean get() = title.isNotBlank() && locationName.isNotBlank()
     val selectedTripTitle: String
@@ -87,7 +89,8 @@ class SpotFormViewModel(
             isUsingFallbackLocation = transient.isUsingFallbackLocation,
             isSaving = transient.isSaving,
             errorMessage = transient.errorMessage,
-            mapEngine = settings?.mapEngine ?: MapEngineType.OSM
+            mapEngine = settings?.mapEngine ?: MapEngineType.OSM,
+            googleMapType = settings?.googleMapType ?: GoogleMapType.NORMAL
         )
     }.stateIn(
         scope = viewModelScope,

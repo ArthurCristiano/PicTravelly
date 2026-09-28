@@ -11,12 +11,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.app.pictravelly.core.database.model.settings.GoogleMapType
+import com.app.pictravelly.core.database.model.settings.MapEngineType
 import com.app.pictravelly.core.design.theme.PicTravellyTheme
 import com.app.pictravelly.core.map.MapMarkerData
 import com.app.pictravelly.core.map.components.PicTravellyExpandedMapView
 import com.app.pictravelly.core.map.components.PicTravellySelectedSpotFloatingCard
 import com.app.pictravelly.feature.map.components.MapHeaderChip
 
+/**
+ * TELA: 100% Visual. Não conhece a ViewModel, apenas estados e callbacks.
+ */
 @Composable
 fun MapScreen(
     uiState: MapUiState,
@@ -25,6 +30,9 @@ fun MapScreen(
     onMarkerClick: (MapMarkerData) -> Unit,
     onZoomChange: (Float) -> Unit,
     onNavigateToSpotDetail: (Long) -> Unit,
+    onEngineChange: (MapEngineType) -> Unit,
+    onMapTypeChange: (GoogleMapType) -> Unit,
+    onCenterOnUser: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -45,7 +53,11 @@ fun MapScreen(
                 onClose = onCloseSelection,
                 onMarkerClick = onMarkerClick,
                 onZoomChange = onZoomChange,
+                googleMapType = uiState.googleMapType,
                 showCloseButton = uiState.selectedSpot != null,
+                onEngineChange = onEngineChange,
+                onMapTypeChange = onMapTypeChange,
+                onCenterOnUser = onCenterOnUser,
                 // Injeção do Cabeçalho Superior
                 topContent = {
                     MapHeaderChip(
@@ -60,9 +72,11 @@ fun MapScreen(
                     PicTravellySelectedSpotFloatingCard(
                         selectedSpot = uiState.selectedSpot,
                         onNavigateToDetail = onNavigateToSpotDetail,
-                        modifier = Modifier.align(Alignment.BottomCenter)
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
                     )
-                }
+                },
+                centerTrigger = uiState.centerTrigger
             )
         }
     }
@@ -70,15 +84,18 @@ fun MapScreen(
 
 @Preview(showBackground = true)
 @Composable
-private fun MapScreenView() {
+private fun MapScreenPreview() {
     PicTravellyTheme {
         MapScreen(
-            uiState = MapUiState(),
+            uiState = MapUiState(isLoadingSettings = false), // Força a exibição sem o loading no preview
             contentPadding = PaddingValues(0.dp),
             onCloseSelection = {},
             onMarkerClick = {},
             onZoomChange = {},
-            onNavigateToSpotDetail = { Long },
+            onNavigateToSpotDetail = {},
+            onEngineChange = {},
+            onMapTypeChange = {},
+            onCenterOnUser = { },
             modifier = Modifier
         )
     }

@@ -65,6 +65,9 @@ fun MapRoute(
         onMarkerClick = { marker -> viewModel.selectSpotById(marker.id) },
         onZoomChange = viewModel::updateZoom,
         onNavigateToSpotDetail = onNavigateToSpotDetail,
-        modifier = modifier
+        modifier = modifier,
+        onEngineChange = viewModel::updateMapEngine,
+        onMapTypeChange = viewModel::updateGoogleMapType,
+        onCenterOnUser = viewModel::centerOnUserLocation
     )
 }

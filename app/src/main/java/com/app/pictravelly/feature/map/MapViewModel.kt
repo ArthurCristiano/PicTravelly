@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.pictravelly.core.data.SettingsRepository
 import com.app.pictravelly.core.data.TouristSpotRepository
+import com.app.pictravelly.core.database.model.settings.GoogleMapType
 import com.app.pictravelly.core.database.model.settings.MapEngineType
 import com.app.pictravelly.core.database.model.touristSpot.TouristSpotWithImages
 import com.app.pictravelly.core.location.LocationHelper
@@ -23,7 +24,8 @@ private data class MapTransientState(
     val selectedSpot: TouristSpotWithImages? = null,
     val currentLatitude: Double = LocationHelper.DEFAULT_LATITUDE,
     val currentLongitude: Double = LocationHelper.DEFAULT_LONGITUDE,
-    val isLoadingLocation: Boolean = true
+    val isLoadingLocation: Boolean = true,
+    val centerTrigger: Int = 0 // <--- Essencial para disparar o gatilho infinitas vezes
 )
 
 /**
@@ -37,7 +39,9 @@ data class MapUiState(
     val isLoading: Boolean = true,
     val mapEngine: MapEngineType = MapEngineType.OSM,
     val mapZoom: Float = 13f,
-    val isLoadingSettings: Boolean = true
+    val isLoadingSettings: Boolean = true,
+    val googleMapType: GoogleMapType = GoogleMapType.NORMAL,
+    val centerTrigger: Int = 0 // <--- Repassado para a UI
 ) {
     val markers: List<MapMarkerData>
         get() = spots.map { spotWithImages ->
@@ -82,12 +86,14 @@ class MapViewModel(
             isLoading = false,
             mapEngine = userSettings?.mapEngine ?: MapEngineType.OSM,
             mapZoom = userSettings?.lastZoom ?: 13f,
-            isLoadingSettings = false // <--- ADICIONADO: Assim que o DataStore responde, libera a tela
+            isLoadingSettings = false,
+            googleMapType = userSettings?.googleMapType ?: GoogleMapType.NORMAL,
+            centerTrigger = transient.centerTrigger // <--- Mapeia o gatilho da transient state para a UiState
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = MapUiState(isLoadingSettings = true) // <--- Começa true bloqueando até a 1ª emissão real
+        initialValue = MapUiState(isLoadingSettings = true)
     )
 
     fun updateCurrentLocation(lat: Double, lng: Double) {
@@ -108,6 +114,30 @@ class MapViewModel(
     fun updateZoom(newZoom: Float) {
         viewModelScope.launch {
             settingsRepository.setLastZoom(newZoom)
+        }
+    }
+
+    fun updateMapEngine(newEngine: MapEngineType) {
+        viewModelScope.launch {
+            settingsRepository.setMapEngine(newEngine)
+        }
+    }
+
+    fun updateGoogleMapType(newMapType: GoogleMapType) {
+        viewModelScope.launch {
+            settingsRepository.setMapType(newMapType)
+        }
+    }
+
+    /**
+     * Incrementa o trigger e limpa a seleção para forçar o mapa a animar para a localização do usuário.
+     */
+    fun centerOnUserLocation() {
+        _transientState.update {
+            it.copy(
+                selectedSpot = null,
+                centerTrigger = it.centerTrigger + 1
+            )
         }
     }
 }
