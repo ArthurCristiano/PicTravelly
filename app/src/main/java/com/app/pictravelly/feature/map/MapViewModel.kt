@@ -36,7 +36,8 @@ data class MapUiState(
     val currentLongitude: Double = LocationHelper.DEFAULT_LONGITUDE,
     val isLoading: Boolean = true,
     val mapEngine: MapEngineType = MapEngineType.OSM,
-    val mapZoom: Float = 13f // Adicionado para suportar a UI
+    val mapZoom: Float = 13f,
+    val isLoadingSettings: Boolean = true
 ) {
     val markers: List<MapMarkerData>
         get() = spots.map { spotWithImages ->
@@ -63,13 +64,11 @@ data class MapUiState(
  */
 class MapViewModel(
     touristSpotRepository: TouristSpotRepository,
-    private val settingsRepository: SettingsRepository // Necessário para gerenciar Zoom e Engine
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
-    // Guarda APENAS os estados efêmeros (cliques, localização do GPS do aparelho)
     private val _transientState = MutableStateFlow(MapTransientState())
 
-    // Funde automaticamente Banco de Dados (Room) + Configurações (DataStore) + Interação do Usuário
     val uiState: StateFlow<MapUiState> = combine(
         touristSpotRepository.getAllSpotsStream(),
         settingsRepository.userDataStream,
@@ -82,12 +81,13 @@ class MapViewModel(
             currentLongitude = transient.currentLongitude,
             isLoading = false,
             mapEngine = userSettings?.mapEngine ?: MapEngineType.OSM,
-            mapZoom = userSettings?.lastZoom ?: 13f
+            mapZoom = userSettings?.lastZoom ?: 13f,
+            isLoadingSettings = false // <--- ADICIONADO: Assim que o DataStore responde, libera a tela
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = MapUiState()
+        initialValue = MapUiState(isLoadingSettings = true) // <--- Começa true bloqueando até a 1ª emissão real
     )
 
     fun updateCurrentLocation(lat: Double, lng: Double) {
@@ -97,7 +97,6 @@ class MapViewModel(
     }
 
     fun selectSpotById(spotId: Long) {
-        // Usa o estado recém-calculado da View (StateFlow atualizado) para evitar acesso a cache velho
         val spot = uiState.value.spots.firstOrNull { it.spot.id == spotId }
         _transientState.update { it.copy(selectedSpot = spot) }
     }
@@ -106,10 +105,6 @@ class MapViewModel(
         _transientState.update { it.copy(selectedSpot = null) }
     }
 
-    /**
-     * Acionado pelos botões + e - da Interface.
-     * Salva o novo valor no disco (DataStore). O operador combine refará a tela automaticamente.
-     */
     fun updateZoom(newZoom: Float) {
         viewModelScope.launch {
             settingsRepository.setLastZoom(newZoom)

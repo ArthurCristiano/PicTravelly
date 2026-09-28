@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -61,7 +62,6 @@ fun HomeScreen(
         }
     }
 
-    // CORREÇÃO: O modifier recebido vai APENAS no elemento raiz
     Box(modifier = modifier.fillMaxSize()) {
 
         // Modo Normal: Dashboard Rolável
@@ -74,7 +74,6 @@ fun HomeScreen(
                 .padding(horizontal = 16.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // CORREÇÃO: Removido o 'modifier = modifier' dos filhos
             HomeHeaderSection(
                 totalSpots = uiState.totalSpotsCount,
                 travelerLevel = uiState.travelerLevel
@@ -86,22 +85,32 @@ fun HomeScreen(
                 totalSpots = uiState.totalSpotsCount
             )
 
-            // Card de Preview do Mapa (Dashboard)
-            PicTravellyPreviewMapCard(
-                currentLatitude = uiState.currentLatitude,
-                currentLongitude = uiState.currentLongitude,
-                markers = markersForMap,
-                engine = uiState.mapEngine, // Assegure-se de ter essas variáveis no HomeUiState
-                zoom = uiState.mapZoom,
-                onExpandClick = { onMapExpandedChange(true) },
-                onMarkerSelect = { markerId ->
-                    val selected = uiState.spots.firstOrNull { it.spot.id == markerId }
-                    if (selected != null) {
-                        onSpotSelect(selected)
-                        onMapExpandedChange(true)
-                    }
+            if (uiState.isLoadingSettings) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
-            )
+            } else {
+                PicTravellyPreviewMapCard(
+                    currentLatitude = uiState.currentLatitude,
+                    currentLongitude = uiState.currentLongitude,
+                    markers = markersForMap,
+                    engine = uiState.mapEngine,
+                    zoom = uiState.mapZoom,
+                    onExpandClick = { onMapExpandedChange(true) },
+                    onMarkerSelect = { markerId ->
+                        val selected = uiState.spots.firstOrNull { it.spot.id == markerId }
+                        if (selected != null) {
+                            onSpotSelect(selected)
+                            onMapExpandedChange(true)
+                        }
+                    }
+                )
+            }
 
             HomeNewEntryActionCard(
                 onNavigateToCreate = onNavigateToCreate

@@ -15,9 +15,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/**
- * Estado dinâmico provisório (Ações do usuário na tela).
- */
 private data class HomeTransientState(
     val isMapExpanded: Boolean = false,
     val selectedSpot: TouristSpotWithImages? = null,
@@ -34,7 +31,8 @@ data class HomeUiState(
     val currentLongitude: Double = LocationHelper.DEFAULT_LONGITUDE,
     val isLoadingLocation: Boolean = true,
     val mapEngine: MapEngineType = MapEngineType.OSM,
-    val mapZoom: Float = 13f
+    val mapZoom: Float = 13f,
+    val isLoadingSettings: Boolean = true // <--- ADICIONADO: Controla se o DataStore já respondeu
 ) {
     val totalSpotsCount: Int get() = spots.size
 
@@ -78,13 +76,15 @@ class HomeViewModel(
             currentLatitude = transient.currentLatitude,
             currentLongitude = transient.currentLongitude,
             isLoadingLocation = transient.isLoadingLocation,
-            mapEngine = settings.mapEngine,
-            mapZoom = settings.lastZoom
+            // Se 'settings' veio do DataStore, usamos ele. Se for null, mantemos o fallback mas marcamos como carregado se necessário.
+            mapEngine = settings?.mapEngine ?: MapEngineType.OSM,
+            mapZoom = settings?.lastZoom ?: 13f,
+            isLoadingSettings = false // <--- ADICIONADO: Assim que o combine roda pela 1ª vez com o DataStore, fica false!
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = HomeUiState()
+        initialValue = HomeUiState(isLoadingSettings = true) // <--- Começa true bloqueando a renderização cega
     )
 
     fun updateCurrentLocation(lat: Double, lng: Double) {

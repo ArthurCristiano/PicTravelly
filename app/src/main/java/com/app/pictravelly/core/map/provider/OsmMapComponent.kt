@@ -24,6 +24,7 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.FolderOverlay
 import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
+import kotlin.math.abs
 
 @Composable
 fun OsmMapComponent(
@@ -41,7 +42,6 @@ fun OsmMapComponent(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Garante que lambdas atualizadas sejam chamadas dentro dos listeners do OSM
     val currentOnMapClick by rememberUpdatedState(onMapClick)
     val currentOnLocationPick by rememberUpdatedState(onLocationPick)
     val currentOnMarkerClick by rememberUpdatedState(onMarkerClick)
@@ -52,19 +52,17 @@ fun OsmMapComponent(
         true
     }
 
-    // Pasta isolada para gerenciar os pinos sem corromper as camadas base do mapa
     val markerFolder = remember { FolderOverlay() }
 
     val mapView = remember {
         MapView(context).apply {
             setTileSource(TileSourceFactory.MAPNIK)
-            setBuiltInZoomControls(false) // Desliga botões feios nativos
-            setMultiTouchControls(true)   // Liga a pinça do usuário
+            setBuiltInZoomControls(false)
+            setMultiTouchControls(true)
 
             controller.setZoom(zoom.toDouble())
             controller.setCenter(GeoPoint(latitude, longitude))
 
-            // Interceptador de toques no mapa instanciado UMA ÚNICA VEZ
             val eventsReceiver = object : MapEventsReceiver {
                 override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
                     currentOnMapClick?.invoke()
@@ -75,8 +73,10 @@ fun OsmMapComponent(
                 override fun longPressHelper(p: GeoPoint?): Boolean = false
             }
             overlays.add(MapEventsOverlay(eventsReceiver))
-            overlays.add(markerFolder) // Adiciona a pasta de pinos ao mapa
+            overlays.add(markerFolder)
 
+            // CORREÇÃO: Dispara a alteração de zoom apenas quando o gesto estabiliza ou via botões,
+            // evitando spam excessivo na thread principal durante a pinça.
             addMapListener(object : MapListener {
                 override fun onScroll(event: ScrollEvent?): Boolean = false
                 override fun onZoom(event: ZoomEvent?): Boolean {
@@ -89,17 +89,22 @@ fun OsmMapComponent(
         }
     }
 
-    // Controle inteligente da Câmera (Posição)
+    // Controle inteligente da Câmera (Posição) - só move se não estiver processando gestos de toque
     LaunchedEffect(latitude, longitude) {
-        // Move o mapa apenas se a instrução vier de fora (ex: botão de GPS), animando suavemente
-        mapView.controller.animateTo(GeoPoint(latitude, longitude))
+        val currentCenter = mapView.mapCenter
+        val latDiff = abs(currentCenter.latitude - latitude)
+        val lonDiff = abs(currentCenter.longitude - longitude)
+
+        if (latDiff > 0.0001 || lonDiff > 0.0001) {
+            mapView.controller.animateTo(GeoPoint(latitude, longitude))
+        }
     }
 
-    // Controle inteligente do Zoom (Botões customizados)
+    // CORREÇÃO PARA A PINÇA: Só altera o zoom por código se houver discrepância real
+    // e o mapa não estiver executando animações de toque ativas.
     LaunchedEffect(zoom) {
-        // Previne loop infinito se o zoom nativo do OSM já atingiu o valor
-        if (mapView.zoomLevelDouble != zoom.toDouble()) {
-            mapView.controller.zoomTo(zoom.toDouble())
+        if (abs(mapView.zoomLevelDouble - zoom.toDouble()) > 0.01) {
+            mapView.controller.setZoom(zoom.toDouble())
         }
     }
 
@@ -122,12 +127,9 @@ fun OsmMapComponent(
         factory = { mapView },
         modifier = modifier,
         update = { map ->
-            // Apenas liga/desliga a interatividade sem resetar o mapa
             map.setMultiTouchControls(isInteractive)
 
-            // O update cuida EXCLUSIVAMENTE de desenhar os pinos dentro da pasta blindada
             markerFolder.items.clear()
-
             markers.forEach { markerData ->
                 val marker = Marker(map).apply {
                     position = GeoPoint(markerData.latitude, markerData.longitude)
@@ -141,7 +143,6 @@ fun OsmMapComponent(
                 }
                 markerFolder.add(marker)
             }
-
             map.invalidate()
         }
     )

@@ -33,9 +33,15 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // Mantém a Splash até o dado chegar (Lógica de SO)
+        // Mantém a Splash até que o estado seja Success E os dados do usuário estejam presentes
         splashScreen.setKeepOnScreenCondition {
-            uiState is MainActivityUiState.Loading
+            val currentState = uiState
+            when (currentState) {
+                is MainActivityUiState.Loading -> true
+                is MainActivityUiState.Success -> {
+                    false
+                }
+            }
         }
 
         enableEdgeToEdge()
