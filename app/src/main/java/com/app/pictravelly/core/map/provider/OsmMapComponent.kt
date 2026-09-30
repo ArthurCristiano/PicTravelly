@@ -5,8 +5,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
@@ -63,91 +65,85 @@ fun OsmMapComponent(
         true
     }
 
-    val markerFolder = remember { FolderOverlay() }
+    var activeMapView by remember { mutableStateOf<MapView?>(null) }
 
     // O OpenStreetMap opera com sua camada vetorial padrão mundial oficial (MAPNIK)
     val tileSource: ITileSource = TileSourceFactory.MAPNIK
 
-    val mapView = remember {
-        MapView(context).apply {
-            setTileSource(tileSource)
-            setBuiltInZoomControls(false)
-            setMultiTouchControls(true)
-
-            controller.setZoom(zoom.toDouble())
-            controller.setCenter(GeoPoint(latitude, longitude))
-
-            val eventsReceiver = object : MapEventsReceiver {
-                override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
-                    currentOnMapClick?.invoke()
-                    if (p != null) currentOnLocationPick?.invoke(p.latitude, p.longitude)
-                    return true
-                }
-
-                override fun longPressHelper(p: GeoPoint?): Boolean = false
-            }
-            overlays.add(MapEventsOverlay(eventsReceiver))
-            overlays.add(markerFolder)
-
-            addMapListener(object : MapListener {
-                override fun onScroll(event: ScrollEvent?): Boolean = false
-                override fun onZoom(event: ZoomEvent?): Boolean {
-                    event?.let {
-                        currentOnZoomChange?.invoke(it.zoomLevel.toFloat())
-                    }
-                    return true
-                }
-            })
-        }
-    }
-
-    LaunchedEffect(latitude, longitude) {
-        val currentCenter = mapView.mapCenter
-        val latDiff = abs(currentCenter.latitude - latitude)
-        val lonDiff = abs(currentCenter.longitude - longitude)
-
-        if (latDiff > 0.0001 || lonDiff > 0.0001) {
-            mapView.controller.animateTo(GeoPoint(latitude, longitude))
-        }
-    }
-
     LaunchedEffect(zoom) {
-        if (abs(mapView.zoomLevelDouble - zoom.toDouble()) > 0.01) {
-            mapView.controller.setZoom(zoom.toDouble())
+        val map = activeMapView ?: return@LaunchedEffect
+        if (abs(map.zoomLevelDouble - zoom.toDouble()) > 0.1) {
+            map.controller.setZoom(zoom.toDouble())
         }
     }
 
     // ÚNICO GATILHO DE MOVIMENTO:
     // Dispara a animação sempre que mudar lat/long externamente OU o gatilho do botão for acionado
     LaunchedEffect(latitude, longitude, centerTrigger) {
-        val currentCenter = mapView.mapCenter
+        val map = activeMapView ?: return@LaunchedEffect
+        val currentCenter = map.mapCenter
         val latDiff = abs(currentCenter.latitude - latitude)
         val lonDiff = abs(currentCenter.longitude - longitude)
 
         // Evita chamadas de animação desnecessárias se o mapa já estiver no lugar certo
         // (mas força a ida se o trigger de centralizar tiver sido acionado)
         if (latDiff > 0.0001 || lonDiff > 0.0001 || centerTrigger > 0) {
-            mapView.controller.animateTo(GeoPoint(latitude, longitude))
+            map.controller.animateTo(GeoPoint(latitude, longitude))
         }
     }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_RESUME -> mapView.onResume()
-                Lifecycle.Event.ON_PAUSE -> mapView.onPause()
+                Lifecycle.Event.ON_RESUME -> activeMapView?.onResume()
+                Lifecycle.Event.ON_PAUSE -> activeMapView?.onPause()
                 else -> Unit
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
-            mapView.onDetach()
         }
     }
 
     AndroidView(
-        factory = { mapView },
+        factory = { ctx ->
+            MapView(ctx).apply {
+                setTileSource(tileSource)
+                setBuiltInZoomControls(false)
+                setMultiTouchControls(isInteractive)
+
+                controller.setZoom(zoom.toDouble())
+                controller.setCenter(GeoPoint(latitude, longitude))
+
+                val eventsReceiver = object : MapEventsReceiver {
+                    override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
+                        currentOnMapClick?.invoke()
+                        if (p != null) currentOnLocationPick?.invoke(p.latitude, p.longitude)
+                        return true
+                    }
+
+                    override fun longPressHelper(p: GeoPoint?): Boolean = false
+                }
+                overlays.add(MapEventsOverlay(eventsReceiver))
+
+                addMapListener(object : MapListener {
+                    override fun onScroll(event: ScrollEvent?): Boolean = false
+                    override fun onZoom(event: ZoomEvent?): Boolean {
+                        event?.let {
+                            val currentZoom = zoomLevelDouble
+                            val newZoom = it.zoomLevel
+                            if (abs(currentZoom - newZoom) > 0.15) {
+                                currentOnZoomChange?.invoke(newZoom.toFloat())
+                            }
+                        }
+                        return true
+                    }
+                })
+
+                activeMapView = this
+            }
+        },
         modifier = modifier,
         update = { map ->
             // Atualiza a fonte do tile se o usuário mudou a configuração nas preferências
@@ -157,7 +153,9 @@ fun OsmMapComponent(
 
             map.setMultiTouchControls(isInteractive)
 
-            markerFolder.items.clear()
+            // Remove marcadores anteriores de forma limpa
+            map.overlays.removeAll { it is Marker }
+
             markers.forEach { markerData ->
                 val marker = Marker(map).apply {
                     position = GeoPoint(markerData.latitude, markerData.longitude)
@@ -165,15 +163,14 @@ fun OsmMapComponent(
                     snippet = markerData.snippet
                     setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
 
-                    // Customização Visual do OSM (Usando o ícone base do OSM e alterando a cor)
+                    // Customização Visual do OSM
                     when (markerData.type) {
                         MarkerType.USER_LOCATION -> {
-                            // Pinta o ícone padrão do OSM de AZUL (ou carregue o getOsmTintedMarker criado no passo 2)
                             val defaultIcon = ContextCompat.getDrawable(
                                 context,
                                 org.osmdroid.library.R.drawable.marker_default
                             )?.mutate()
-                            defaultIcon?.setTint(primaryColor) // Cor do usuário
+                            defaultIcon?.setTint(primaryColor)
                             icon = defaultIcon
                         }
 
@@ -182,7 +179,7 @@ fun OsmMapComponent(
                                 context,
                                 org.osmdroid.library.R.drawable.marker_default
                             )?.mutate()
-                            defaultIcon?.setTint(secondaryColor) // Cor dos spots
+                            defaultIcon?.setTint(secondaryColor)
                             icon = defaultIcon
                         }
                     }
@@ -194,9 +191,16 @@ fun OsmMapComponent(
                         true
                     }
                 }
-                markerFolder.add(marker)
+                map.overlays.add(marker)
             }
             map.invalidate()
+        },
+        onRelease = { map ->
+            activeMapView = null
+            runCatching {
+                map.onPause()
+                map.onDetach()
+            }
         }
     )
 }

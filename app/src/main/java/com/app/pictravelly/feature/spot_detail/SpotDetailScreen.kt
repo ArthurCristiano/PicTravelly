@@ -1,8 +1,15 @@
 package com.app.pictravelly.feature.spot_detail
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.ui.graphics.TransformOrigin
+import com.app.pictravelly.core.navigation.PicTravellyNavTransitions
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -254,11 +261,35 @@ fun SpotDetailScreen(
             }
         }
 
-        // MAPA PADRONIZADO (Expandido sobre a Scaffold)
+        // MAPA PADRONIZADO (Expandido sobre a Scaffold com animação M3 Expressive)
         AnimatedVisibility(
             visible = isMapExpanded && uiState.spotWithImages != null,
-            enter = fadeIn(),
-            exit = fadeOut()
+            enter = fadeIn(
+                animationSpec = tween(
+                    durationMillis = 350,
+                    easing = PicTravellyNavTransitions.EmphasizedDecelerate
+                )
+            ) + scaleIn(
+                initialScale = 0.86f,
+                transformOrigin = TransformOrigin(0.5f, 0.45f),
+                animationSpec = spring(
+                    dampingRatio = 0.82f,
+                    stiffness = Spring.StiffnessMediumLow
+                )
+            ),
+            exit = fadeOut(
+                animationSpec = tween(
+                    durationMillis = 200,
+                    easing = PicTravellyNavTransitions.EmphasizedAccelerate
+                )
+            ) + scaleOut(
+                targetScale = 0.86f,
+                transformOrigin = TransformOrigin(0.5f, 0.45f),
+                animationSpec = tween(
+                    durationMillis = 250,
+                    easing = PicTravellyNavTransitions.EmphasizedAccelerate
+                )
+            )
         ) {
             val spot = uiState.spotWithImages!!.spot
             val singleMarker = listOf(

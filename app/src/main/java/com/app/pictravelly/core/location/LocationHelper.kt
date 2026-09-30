@@ -44,20 +44,26 @@ object LocationHelper {
                 try {
                     fusedClient.lastLocation
                         .addOnSuccessListener { location: Location? ->
-                            if (location != null) {
-                                continuation.resume(Pair(location.latitude, location.longitude))
-                            } else {
-                                // Fallback para LocationManager nativo
+                            if (continuation.isActive) {
+                                if (location != null) {
+                                    continuation.resume(Pair(location.latitude, location.longitude))
+                                } else {
+                                    // Fallback para LocationManager nativo
+                                    val fallback = getNativeLastLocation(context)
+                                    continuation.resume(fallback)
+                                }
+                            }
+                        }
+                        .addOnFailureListener {
+                            if (continuation.isActive) {
                                 val fallback = getNativeLastLocation(context)
                                 continuation.resume(fallback)
                             }
                         }
-                        .addOnFailureListener {
-                            val fallback = getNativeLastLocation(context)
-                            continuation.resume(fallback)
-                        }
-                } catch (e: SecurityException) {
-                    continuation.resume(Pair(DEFAULT_LATITUDE, DEFAULT_LONGITUDE))
+                } catch (e: Exception) {
+                    if (continuation.isActive) {
+                        continuation.resume(Pair(DEFAULT_LATITUDE, DEFAULT_LONGITUDE))
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -68,11 +74,20 @@ object LocationHelper {
     private fun getNativeLastLocation(context: Context): Pair<Double, Double> {
         return try {
             val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
-            val providers = locationManager?.getProviders(true) ?: emptyList()
+            val providers = try {
+                locationManager?.getProviders(true) ?: emptyList()
+            } catch (e: Exception) {
+                emptyList()
+            }
             var bestLocation: Location? = null
 
             for (provider in providers) {
-                val l = locationManager?.getLastKnownLocation(provider) ?: continue
+                val l = try {
+                    locationManager?.getLastKnownLocation(provider)
+                } catch (e: Exception) {
+                    null
+                } ?: continue
+
                 if (bestLocation == null || l.accuracy < bestLocation.accuracy) {
                     bestLocation = l
                 }
@@ -83,7 +98,7 @@ object LocationHelper {
             } else {
                 Pair(DEFAULT_LATITUDE, DEFAULT_LONGITUDE)
             }
-        } catch (e: SecurityException) {
+        } catch (e: Exception) {
             Pair(DEFAULT_LATITUDE, DEFAULT_LONGITUDE)
         }
     }

@@ -1,10 +1,17 @@
 package com.app.pictravelly.feature.home
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.ui.graphics.TransformOrigin
+import com.app.pictravelly.core.navigation.PicTravellyNavTransitions
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -42,6 +49,7 @@ import coil.compose.AsyncImage
 import com.app.pictravelly.core.database.model.touristSpot.TouristSpotWithImages
 import com.app.pictravelly.core.design.components.PicTravellyButton
 import com.app.pictravelly.core.design.theme.PicTravellyTheme
+import com.app.pictravelly.core.map.components.PicTravellySelectedSpotFloatingCard
 import com.app.pictravelly.core.map.components.expandedMap.PicTravellySmartMapView
 import com.app.pictravelly.core.map.components.previewCard.PicTravellySmartPreviewMapCard
 import com.app.pictravelly.feature.home.components.HomeGamificationCard
@@ -112,112 +120,59 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(72.dp))
         }
 
-        // Modo Mapa Expandido Padronizado (Sobrepondo a Home)
+        // Modo Mapa Expandido Padronizado (Sobrepondo a Home com expansão orgânica estilo Container Transform)
         AnimatedVisibility(
             visible = uiState.isMapExpanded,
-            enter = fadeIn(),
-            exit = fadeOut()
+            enter = fadeIn(
+                animationSpec = tween(
+                    durationMillis = 350,
+                    easing = PicTravellyNavTransitions.EmphasizedDecelerate
+                )
+            ) + scaleIn(
+                initialScale = 0.86f,
+                transformOrigin = TransformOrigin(0.5f, 0.35f),
+                animationSpec = spring(
+                    dampingRatio = 0.82f,
+                    stiffness = Spring.StiffnessMediumLow
+                )
+            ),
+            exit = fadeOut(
+                animationSpec = tween(
+                    durationMillis = 200,
+                    easing = PicTravellyNavTransitions.EmphasizedAccelerate
+                )
+            ) + scaleOut(
+                targetScale = 0.86f,
+                transformOrigin = TransformOrigin(0.5f, 0.35f),
+                animationSpec = tween(
+                    durationMillis = 250,
+                    easing = PicTravellyNavTransitions.EmphasizedAccelerate
+                )
+            )
         ) {
             PicTravellySmartMapView(
                 latitude = uiState.currentLatitude,
                 longitude = uiState.currentLongitude,
-                markers = uiState.markers, // <--- Usa diretamente da UiState
+                markers = uiState.markers,
                 onClose = { onMapExpandedChange(false) },
                 onMarkerClick = { marker ->
                     val selected = uiState.spots.firstOrNull { it.spot.id == marker.id }
                     if (selected != null) onSpotSelect(selected)
                 },
+                onMapClick = { onSpotSelect(null) },
                 onFetchLocationRequested = onFetchLocationRequested,
                 bottomContent = {
-                    SelectedSpotFloatingCard(
+                    PicTravellySelectedSpotFloatingCard(
                         selectedSpot = uiState.selectedSpot,
                         onNavigateToDetail = onNavigateToDetail,
+                        onClose = { onSpotSelect(null) },
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
-                            .padding(bottom = contentPadding.calculateBottomPadding()) // <--- Correção do Bottom Nav
+                            .padding(bottom = 16.dp)
                     )
                 },
                 showCloseButton = true
             )
-        }
-    }
-}
-
-/**
- * Componente privado da Home para desenhar o card do ponto turístico.
- * Como ele vive na Feature, ele pode consumir a entidade do banco de dados livremente.
- */
-@Composable
-private fun SelectedSpotFloatingCard(
-    selectedSpot: TouristSpotWithImages?,
-    onNavigateToDetail: (Long) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    AnimatedVisibility(
-        visible = selectedSpot != null,
-        modifier = modifier
-            .navigationBarsPadding()
-            .padding(bottom = 24.dp, start = 16.dp, end = 16.dp),
-        enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-        exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
-    ) {
-        selectedSpot?.let { selected ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
-                    .clickable { onNavigateToDetail(selected.spot.id) },
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (selected.coverImageUri != null) {
-                        AsyncImage(
-                            model = selected.coverImageUri,
-                            contentDescription = selected.spot.title,
-                            modifier = Modifier
-                                .size(72.dp)
-                                .clip(RoundedCornerShape(12.dp)),
-                            contentScale = ContentScale.Crop
-                        )
-                        Spacer(modifier = Modifier.width(14.dp))
-                    }
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = selected.spot.title,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1
-                        )
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Place,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = selected.spot.locationName,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        PicTravellyButton(
-                            text = "Abrir Diário",
-                            onClick = { onNavigateToDetail(selected.spot.id) }
-                        )
-                    }
-                }
-            }
         }
     }
 }

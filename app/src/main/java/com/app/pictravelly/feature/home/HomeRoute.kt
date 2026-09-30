@@ -3,6 +3,7 @@ package com.app.pictravelly.feature.home
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -18,10 +19,15 @@ fun HomeRoute(
     onNavigateToCreate: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = viewModel(factory = AppViewModelProvider.Factory),
-    contentPadding: PaddingValues = PaddingValues(0.dp)
+    contentPadding: PaddingValues = PaddingValues(0.dp),
+    onMapExpandedChange: ((Boolean) -> Unit)? = null
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
+    LaunchedEffect(uiState.isMapExpanded) {
+        onMapExpandedChange?.invoke(uiState.isMapExpanded)
+    }
 
     // Delegação do botão voltar do hardware para recolher o mapa
     BackHandler(enabled = uiState.isMapExpanded) {

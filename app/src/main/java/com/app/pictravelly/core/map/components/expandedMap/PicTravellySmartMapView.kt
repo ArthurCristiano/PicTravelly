@@ -38,6 +38,7 @@ fun PicTravellySmartMapView(
     onMarkerClick: (MapMarkerData) -> Unit,
     modifier: Modifier = Modifier,
     showCloseButton: Boolean = true,
+    onMapClick: (() -> Unit)? = null,
     topContent: @Composable (BoxScope.() -> Unit)? = null,
     bottomContent: @Composable (BoxScope.() -> Unit)? = null,
     onFetchLocationRequested: () -> Unit = {}, // <--- Callback para a ViewModel buscar a localização
@@ -71,44 +72,40 @@ fun PicTravellySmartMapView(
         return
     }
 
-    Box(modifier = modifier.fillMaxSize()) {
-        PicTravellyExpandedMapView(
-            latitude = latitude,
-            longitude = longitude,
-            engine = mapSettings!!.mapEngine ?: MapEngineType.OSM,
-            zoom = mapSettings!!.lastZoom ?: 13f,
-            googleMapType = mapSettings!!.googleMapType ?: GoogleMapType.NORMAL,
-            centerTrigger = centerTrigger,
-            markers = markers,
-            showCloseButton = showCloseButton,
-            onClose = onClose,
-            onMarkerClick = onMarkerClick,
-            onZoomChange = mapConfigViewModel::updateZoom,
-            onEngineChange = mapConfigViewModel::updateMapEngine,
-            onMapTypeChange = mapConfigViewModel::updateGoogleMapType,
-            onCenterOnUser = mapConfigViewModel::triggerCenterOnUser,
-            topContent = topContent,
-            bottomContent = bottomContent,
-            modifier = Modifier.fillMaxSize()
-        )
-
-        // 4. Injeta o Banner no topo da tela (abaixo da status bar)
-        PicTravellyLocationWarningBanner(
-            status = locationStatus,
-            onRequestPermission = {
-                permissionLauncher.launch(
-                    arrayOf(
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
+    PicTravellyExpandedMapView(
+        latitude = latitude,
+        longitude = longitude,
+        engine = mapSettings!!.mapEngine ?: MapEngineType.OSM,
+        zoom = mapSettings!!.lastZoom ?: 13f,
+        googleMapType = mapSettings!!.googleMapType ?: GoogleMapType.NORMAL,
+        centerTrigger = centerTrigger,
+        markers = markers,
+        showCloseButton = showCloseButton,
+        onClose = onClose,
+        onMarkerClick = onMarkerClick,
+        onMapClick = onMapClick,
+        onZoomChange = mapConfigViewModel::updateZoom,
+        onEngineChange = mapConfigViewModel::updateMapEngine,
+        onMapTypeChange = mapConfigViewModel::updateGoogleMapType,
+        onCenterOnUser = mapConfigViewModel::triggerCenterOnUser,
+        topContent = topContent,
+        bottomContent = bottomContent,
+        locationWarningBanner = {
+            PicTravellyLocationWarningBanner(
+                status = locationStatus,
+                onRequestPermission = {
+                    permissionLauncher.launch(
+                        arrayOf(
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                        )
                     )
-                )
-            },
-            onOpenGpsSettings = {
-                context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
-            },
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = 90.dp) // Fica logo abaixo dos botões flutuantes de fechar/engrenagem
-        )
-    }
+                },
+                onOpenGpsSettings = {
+                    context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                }
+            )
+        },
+        modifier = modifier.fillMaxSize()
+    )
 }

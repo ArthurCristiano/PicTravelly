@@ -1,6 +1,11 @@
 package com.app.pictravelly.core.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
@@ -33,6 +38,7 @@ import com.app.pictravelly.core.design.components.DockDestination
 import com.app.pictravelly.core.design.components.PicTravellyOneUiDock
 import com.app.pictravelly.core.di.AppViewModelProvider
 import com.app.pictravelly.core.navigation.DestinationScreen
+import com.app.pictravelly.core.navigation.PicTravellyNavTransitions
 import com.app.pictravelly.core.ui.components.AddEntrySheetContent
 import com.app.pictravelly.feature.home.HomeRoute
 import com.app.pictravelly.feature.map.MapRoute
@@ -64,8 +70,17 @@ fun PicTravellyAppScreen() {
     val tripRepository = app.container.tripRepository
     val settingsRepository = app.container.settingsRepository // CORREÇÃO: Adicionado
 
-    // Oculta o dock nos formulários e nas telas de detalhe
-    val shouldShowDock = currentRoute in listOf(
+    // Oculta o dock quando o mapa estiver expandido em tela cheia na Home
+    var isHomeMapExpanded by remember { mutableStateOf(false) }
+
+    androidx.compose.runtime.LaunchedEffect(currentRoute) {
+        if (currentRoute != DestinationScreen.HOME.route) {
+            isHomeMapExpanded = false
+        }
+    }
+
+    // Oculta o dock nos formulários, nas telas de detalhe e quando o mapa da home estiver expandido
+    val shouldShowDock = !isHomeMapExpanded && currentRoute in listOf(
         DestinationScreen.HOME.route,
         DestinationScreen.TRIPS.route,
         DestinationScreen.MAP.route,
@@ -81,7 +96,11 @@ fun PicTravellyAppScreen() {
         Scaffold { paddingValues ->
             NavHost(
                 navController = navController,
-                startDestination = DestinationScreen.HOME.route
+                startDestination = DestinationScreen.HOME.route,
+                enterTransition = PicTravellyNavTransitions.enterTransition,
+                exitTransition = PicTravellyNavTransitions.exitTransition,
+                popEnterTransition = PicTravellyNavTransitions.popEnterTransition,
+                popExitTransition = PicTravellyNavTransitions.popExitTransition
             ) {
                 // 1. Rota da Home (Dashboard)
                 composable(DestinationScreen.HOME.route) {
@@ -95,7 +114,10 @@ fun PicTravellyAppScreen() {
                         onNavigateToCreate = {
                             navController.navigate(DestinationScreen.createSpotFormRoute())
                         },
-                        contentPadding = paddingValues
+                        contentPadding = paddingValues,
+                        onMapExpandedChange = { expanded ->
+                            isHomeMapExpanded = expanded
+                        }
                     )
                 }
 
@@ -265,8 +287,30 @@ fun PicTravellyAppScreen() {
         AnimatedVisibility(
             visible = shouldShowDock,
             modifier = Modifier.align(Alignment.BottomCenter),
-            enter = slideInVertically(initialOffsetY = { it }),
-            exit = slideOutVertically(targetOffsetY = { it })
+            enter = slideInVertically(
+                initialOffsetY = { it },
+                animationSpec = spring(
+                    dampingRatio = 0.82f,
+                    stiffness = Spring.StiffnessMediumLow
+                )
+            ) + fadeIn(
+                animationSpec = tween(
+                    durationMillis = 220,
+                    easing = PicTravellyNavTransitions.EmphasizedDecelerate
+                )
+            ),
+            exit = slideOutVertically(
+                targetOffsetY = { it },
+                animationSpec = tween(
+                    durationMillis = 250,
+                    easing = PicTravellyNavTransitions.EmphasizedAccelerate
+                )
+            ) + fadeOut(
+                animationSpec = tween(
+                    durationMillis = 180,
+                    easing = PicTravellyNavTransitions.EmphasizedAccelerate
+                )
+            )
         ) {
             PicTravellyOneUiDock(
                 currentRoute = currentRoute,
@@ -312,9 +356,15 @@ fun PicTravellyAppScreen() {
 }
 
 private fun NavHostController.navigateToTab(route: String) {
-    navigate(route) {
-        popUpTo(graph.findStartDestination().id) { saveState = true }
-        launchSingleTop = true
-        restoreState = true
+    val currentRoute = currentBackStackEntry?.destination?.route
+    if (currentRoute == route) {
+        return
+    }
+    runCatching {
+        navigate(route) {
+            popUpTo(graph.findStartDestination().id) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
     }
 }

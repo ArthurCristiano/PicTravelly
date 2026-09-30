@@ -6,8 +6,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -55,8 +57,10 @@ fun PicTravellyExpandedMapView(
     centerTrigger: Int = 0,
     modifier: Modifier = Modifier,
     showCloseButton: Boolean = true,
+    onMapClick: (() -> Unit)? = null,
     topContent: @Composable (BoxScope.() -> Unit)? = null,
-    bottomContent: @Composable (BoxScope.() -> Unit)? = null
+    bottomContent: @Composable (BoxScope.() -> Unit)? = null,
+    locationWarningBanner: @Composable (() -> Unit)? = null
 ) {
     var ephemeralZoom by remember(zoom) { mutableFloatStateOf(zoom) }
     var showSettingsDialog by remember { mutableStateOf(false) }
@@ -80,6 +84,7 @@ fun PicTravellyExpandedMapView(
             zoom = ephemeralZoom,
             markers = markers,
             onMarkerClick = onMarkerClick,
+            onMapClick = onMapClick,
             onZoomChange = { newZoom -> ephemeralZoom = newZoom },
             modifier = Modifier.fillMaxSize(),
             isInteractive = true,
@@ -87,8 +92,6 @@ fun PicTravellyExpandedMapView(
             googleMapType = googleMapType,
             centerTrigger = centerTrigger
         )
-
-        topContent?.let { it() }
 
         // Componente Flutuante de Legenda (Canto Superior Esquerdo)
         MapLegendCard(
@@ -99,7 +102,7 @@ fun PicTravellyExpandedMapView(
                 .align(Alignment.TopStart)
                 .statusBarsPadding()
                 .padding(16.dp)
-                .zIndex(10f)
+                .zIndex(20f)
         )
 
         // Linha superior com os botões de Ação (Centralizar + Configurações + Fechar)
@@ -107,7 +110,8 @@ fun PicTravellyExpandedMapView(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .statusBarsPadding()
-                .padding(16.dp),
+                .padding(16.dp)
+                .zIndex(10f),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -164,11 +168,30 @@ fun PicTravellyExpandedMapView(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Recolher Mapa",
+                        contentDescription = "Fechar",
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
+        }
+
+        // Conteúdo central superior (MapHeaderChip + Banner de Aviso sem sobreposição)
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(top = 72.dp, start = 16.dp, end = 16.dp)
+                .zIndex(5f),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            topContent?.let { content ->
+                Box(contentAlignment = Alignment.Center) {
+                    content()
+                }
+            }
+            locationWarningBanner?.invoke()
         }
 
         bottomContent?.let { it() }

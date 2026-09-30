@@ -35,25 +35,24 @@ fun MapScreen(
             markers = uiState.markers,
             onClose = onCloseSelection,
             onMarkerClick = onMarkerClick,
-            showCloseButton = uiState.selectedSpot != null,
+            onMapClick = onCloseSelection,
+            showCloseButton = false,
             onFetchLocationRequested = onFetchLocationRequested,
-            // Injeção do Cabeçalho Superior
+            // Injeção do Cabeçalho Superior centralizado
             topContent = {
                 MapHeaderChip(
-                    spotsCount = uiState.spots.size,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = contentPadding.calculateTopPadding() + 12.dp)
+                    spotsCount = uiState.spots.size
                 )
             },
-            // Injeção do Card Flutuante via Slot API
+            // Injeção do Card Flutuante acima do Dock
             bottomContent = {
                 PicTravellySelectedSpotFloatingCard(
                     selectedSpot = uiState.selectedSpot,
                     onNavigateToDetail = onNavigateToSpotDetail,
+                    onClose = onCloseSelection,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(bottom = contentPadding.calculateBottomPadding())
+                        .padding(bottom = 96.dp)
                 )
             }
         )

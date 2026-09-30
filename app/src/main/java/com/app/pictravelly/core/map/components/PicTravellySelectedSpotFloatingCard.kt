@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,10 +18,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,11 +44,12 @@ import com.app.pictravelly.core.design.components.PicTravellyButton
 fun PicTravellySelectedSpotFloatingCard(
     selectedSpot: TouristSpotWithImages?,
     onNavigateToDetail: (Long) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClose: (() -> Unit)? = null
 ) {
     AnimatedVisibility(
         visible = selectedSpot != null,
-        modifier = modifier.navigationBarsPadding(), // O padding bottom extra deve vir pelo modifier do pai!
+        modifier = modifier.navigationBarsPadding(),
         enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
         exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
     ) {
@@ -53,12 +57,9 @@ fun PicTravellySelectedSpotFloatingCard(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(
-                        horizontal = 16.dp,
-                        vertical = 16.dp
-                    ) // Paddings internos do componente
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
                     .clickable { onNavigateToDetail(selected.spot.id) },
-                shape = RoundedCornerShape(20.dp), // <--- Forma correta de arredondar um Card
+                shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
                 ),
@@ -74,19 +75,39 @@ fun PicTravellySelectedSpotFloatingCard(
                             contentDescription = selected.spot.title,
                             modifier = Modifier
                                 .size(72.dp)
-                                .clip(RoundedCornerShape(12.dp)), // Aqui o clip faz sentido, pois AsyncImage não tem parâmetro shape
+                                .clip(RoundedCornerShape(12.dp)),
                             contentScale = ContentScale.Crop
                         )
                         Spacer(modifier = Modifier.width(14.dp))
                     }
 
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = selected.spot.title,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = selected.spot.title,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                modifier = Modifier.weight(1f, fill = false)
+                            )
+                            if (onClose != null) {
+                                IconButton(
+                                    onClick = onClose,
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Fechar detalhes do ponto",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = Icons.Default.Place,

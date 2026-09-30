@@ -121,7 +121,11 @@ fun PicTravellyOneUiDock(
                     DockItem(
                         item = item,
                         isSelected = currentRoute == item.route,
-                        onClick = { onNavigate(item) }
+                        onClick = {
+                            if (currentRoute != item.route) {
+                                onNavigate(item)
+                            }
+                        }
                     )
                 }
 
@@ -131,7 +135,11 @@ fun PicTravellyOneUiDock(
                     DockItem(
                         item = item,
                         isSelected = currentRoute == item.route,
-                        onClick = { onNavigate(item) }
+                        onClick = {
+                            if (currentRoute != item.route) {
+                                onNavigate(item)
+                            }
+                        }
                     )
                 }
             }
