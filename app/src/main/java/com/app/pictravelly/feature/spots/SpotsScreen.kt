@@ -32,9 +32,6 @@ import com.app.pictravelly.core.design.components.PicTravellyTitle
 import com.app.pictravelly.feature.spots.components.EmptySpotsPlaceholder
 import com.app.pictravelly.feature.spots.components.SpotJournalItem
 
-/**
- * TELA: 100% Visual e Testável. Recebe apenas estado formatado e callbacks.
- */
 @Composable
 fun SpotsScreen(
     uiState: SpotsUiState,

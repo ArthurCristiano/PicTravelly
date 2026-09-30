@@ -16,9 +16,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/**
- * Estado dinâmico provisório (Ações do usuário na tela).
- */
 private data class MapTransientState(
     val selectedSpot: TouristSpotWithImages? = null,
     val currentLatitude: Double = LocationHelper.DEFAULT_LATITUDE,
@@ -26,9 +23,6 @@ private data class MapTransientState(
     val isLoadingLocation: Boolean = true,
 )
 
-/**
- * Estado consolidado da aba Mapa.
- */
 data class MapUiState(
     val spots: List<TouristSpotWithImages> = emptyList(),
     val selectedSpot: TouristSpotWithImages? = null,
@@ -38,7 +32,6 @@ data class MapUiState(
 ) {
     val markers: List<MapMarkerData>
         get() {
-            // 1. Mapeia os pontos turísticos normais
             val spotMarkers = spots.map { spotWithImages ->
                 MapMarkerData(
                     id = spotWithImages.spot.id,
@@ -46,18 +39,18 @@ data class MapUiState(
                     snippet = spotWithImages.spot.locationName,
                     latitude = spotWithImages.spot.latitude,
                     longitude = spotWithImages.spot.longitude,
-                    type = MarkerType.TOURIST_SPOT // Pino normal
+                    type = MarkerType.TOURIST_SPOT
                 )
             }
 
-            // 2. Cria o pino do Usuário (ID negativo para não conflitar com o banco de dados)
+            // ID negativo para evitar colisão com IDs do banco de dados
             val userMarker = MapMarkerData(
                 id = -1L,
                 title = "Você está aqui",
                 snippet = "Sua localização atual",
                 latitude = currentLatitude,
                 longitude = currentLongitude,
-                type = MarkerType.USER_LOCATION // Pino estilizado!
+                type = MarkerType.USER_LOCATION
             )
 
             return spotMarkers + userMarker
@@ -70,9 +63,6 @@ data class MapUiState(
         get() = selectedSpot?.spot?.longitude ?: currentLongitude
 }
 
-/**
- * ViewModel reativa da aba Mapa.
- */
 class MapViewModel(
     touristSpotRepository: TouristSpotRepository,
 ) : ViewModel() {

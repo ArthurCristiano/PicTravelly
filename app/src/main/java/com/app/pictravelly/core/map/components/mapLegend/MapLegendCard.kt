@@ -45,9 +45,6 @@ import com.app.pictravelly.core.map.model.MapMarkerData
 import com.app.pictravelly.core.map.model.MarkerType
 
 
-/**
- * Componente interno expansível para exibir a legenda de coordenadas.
- */
 @Composable
 fun MapLegendCard(
     markers: List<MapMarkerData>,
@@ -57,12 +54,10 @@ fun MapLegendCard(
 ) {
     var isExpanded by remember { mutableStateOf(false) }
 
-    // Separa o usuário dos pontos turísticos reais
     val userMarker = markers.find { it.type == MarkerType.USER_LOCATION }
     val touristSpots = markers.filter { it.type == MarkerType.TOURIST_SPOT }
 
     Column(modifier = modifier, horizontalAlignment = Alignment.Start) {
-        // Botão Fechado (Ícone Flutuante)
         AnimatedVisibility(
             visible = !isExpanded,
             enter = fadeIn(),
@@ -85,7 +80,6 @@ fun MapLegendCard(
             }
         }
 
-        // Card Expandido (Lista de Coordenadas)
         AnimatedVisibility(
             visible = isExpanded,
             enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
@@ -99,10 +93,9 @@ fun MapLegendCard(
                 elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
                 modifier = Modifier
                     .width(260.dp)
-                    .heightIn(max = 400.dp) // Evita que a lista ocupe a tela inteira
+                    .heightIn(max = 400.dp)
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    // Cabeçalho
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -127,7 +120,6 @@ fun MapLegendCard(
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        // 1. Posição Atual (Aparece SOMENTE se o marker do usuário existir)
                         userMarker?.let { user ->
                             item {
                                 LegendListItem(
@@ -143,7 +135,6 @@ fun MapLegendCard(
                             }
                         }
 
-                        // 2. Pontos Turísticos
                         items(touristSpots) { spot ->
                             LegendListItem(
                                 title = spot.title,

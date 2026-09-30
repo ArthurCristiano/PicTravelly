@@ -6,14 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.app.pictravelly.core.database.model.trip.TripEntity
 
-/**
- * Entidade de representação de um Ponto Turístico no Room Database.
- * Atende aos requisitos RF01, RF03, RF05 e modelagem de docs/DATABASE.md.
- *
- * O campo tripId é opcional: ao apagar a viagem os pontos não são perdidos,
- * apenas deixam de pertencer a ela (SET_NULL) e passam a aparecer no grupo
- * "Pontos sem viagem" da aba Diário.
- */
+// Registros com tripId null representam pontos turísticos sem viagem associada.
 @Entity(
     tableName = "tourist_spots",
     foreignKeys = [

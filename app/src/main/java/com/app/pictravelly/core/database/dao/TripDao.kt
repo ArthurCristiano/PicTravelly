@@ -12,9 +12,6 @@ import com.app.pictravelly.core.database.model.trip.TripEntity
 import com.app.pictravelly.core.database.model.trip.TripWithSpots
 import kotlinx.coroutines.flow.Flow
 
-/**
- * Data Access Object para as Viagens e o seu agrupamento de pontos turísticos.
- */
 @Dao
 interface TripDao {
 
@@ -32,7 +29,7 @@ interface TripDao {
     @Query("SELECT * FROM trips WHERE id = :id LIMIT 1")
     suspend fun getTripOnce(id: Long): TripEntity?
 
-    /** Pontos que não pertencem a nenhuma viagem, exibidos em um grupo próprio. */
+    // Retorna pontos turísticos que não pertencem a nenhuma viagem.
     @Transaction
     @Query("SELECT * FROM tourist_spots WHERE tripId IS NULL ORDER BY visitDate DESC")
     fun getSpotsWithoutTrip(): Flow<List<TouristSpotWithImages>>
@@ -49,7 +46,7 @@ interface TripDao {
     @Query("DELETE FROM trips WHERE id = :id")
     suspend fun deleteTripById(id: Long)
 
-    /** Move um ponto para outra viagem, ou o solta ao receber null. */
+    // Associa o ponto a uma viagem, ou desassocia se tripId for null.
     @Query("UPDATE tourist_spots SET tripId = :tripId WHERE id = :spotId")
     suspend fun assignSpotToTrip(spotId: Long, tripId: Long?)
 }

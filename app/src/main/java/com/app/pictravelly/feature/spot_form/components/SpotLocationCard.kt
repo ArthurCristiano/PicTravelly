@@ -81,7 +81,6 @@ fun SpotLocationCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Controle local de Zoom do card. Não precisa persistir no global.
             var formMapZoom by remember(uiState.isUsingFallbackLocation) {
                 mutableFloatStateOf(if (uiState.isUsingFallbackLocation) 11f else 16f)
             }
@@ -116,7 +115,7 @@ fun SpotLocationCard(
                     onLocationPick = onPickOnMap,
                     onZoomChange = {
                         formMapZoom = it
-                    }, // Atualiza o zoom local para os botões do mapa funcionarem
+                    },
                     modifier = Modifier.fillMaxSize(),
                     googleMapType = uiState.googleMapType
                 )

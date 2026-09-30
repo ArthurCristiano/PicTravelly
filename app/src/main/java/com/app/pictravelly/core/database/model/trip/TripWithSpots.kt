@@ -5,13 +5,6 @@ import androidx.room.Relation
 import com.app.pictravelly.core.database.model.touristSpot.TouristSpotEntity
 import com.app.pictravelly.core.database.model.touristSpot.TouristSpotWithImages
 
-/**
- * Modelo de relação entre Trip e seus pontos turísticos.
- *
- * Usa relação em dois níveis: a viagem traz os pontos e cada ponto já traz as
- * suas imagens, então a listagem e o detalhe da viagem são resolvidos em uma
- * única consulta.
- */
 data class TripWithSpots(
     @Embedded
     val trip: TripEntity,
@@ -26,10 +19,7 @@ data class TripWithSpots(
     val spotsCount: Int
         get() = spots.size
 
-    /**
-     * Capa escolhida pelo usuário ou, na falta dela, a primeira foto
-     * encontrada entre os pontos da viagem.
-     */
+    // Retorna a capa da viagem ou a primeira foto disponível de seus pontos.
     val displayCoverUri: String?
         get() = trip.coverImageUri ?: spots.firstNotNullOfOrNull { it.coverImageUri }
 }

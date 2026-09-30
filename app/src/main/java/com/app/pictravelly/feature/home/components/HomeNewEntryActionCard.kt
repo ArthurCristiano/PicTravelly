@@ -29,17 +29,11 @@ import com.app.pictravelly.core.design.components.PicTravellyCard
 import com.app.pictravelly.core.design.theme.PicTravellyTheme
 
 
-/**
- * Card de Ação Convidativo para Adicionar Novo Registro no Diário.
- */
 @Composable
 fun HomeNewEntryActionCard(
     onNavigateToCreate: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    /* 🎨 [DESIGN / HUMBERTO] - CARD DE NOVO REGISTRO:
-     * Personalize com tipografia cursiva, textura de pergaminho ou carimbo vintage de viagem.
-     */
     PicTravellyCard(
         modifier = modifier.fillMaxWidth(),
         containerColor = MaterialTheme.colorScheme.surface,

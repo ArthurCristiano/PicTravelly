@@ -67,7 +67,6 @@ fun RecentMemoriesSection(
         Spacer(modifier = Modifier.height(12.dp))
 
         if (spots.isEmpty()) {
-            /* 🎨 [DESIGN / HUMBERTO]: Estado vazio com ilustração e visual poético de diário novo */
             PicTravellyCard(
                 modifier = Modifier.fillMaxWidth(),
                 containerColor = MaterialTheme.colorScheme.surface
@@ -112,7 +111,6 @@ fun RecentMemoriesSection(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(spots.take(5)) { spotWithImages ->
-                    /* 🎨 [DESIGN / HUMBERTO]: Cada card aqui pode virar uma polaroid com borda branca e sombra sutil */
                     PicTravellyCard(
                         modifier = Modifier
                             .width(180.dp)

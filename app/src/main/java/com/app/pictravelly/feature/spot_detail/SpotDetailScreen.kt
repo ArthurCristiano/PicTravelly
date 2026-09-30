@@ -45,13 +45,10 @@ import java.util.Date
 import java.util.Locale
 
 
-/**
- * TELA: 100% Visual e Testável. Nenhuma dependência de ViewModel.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SpotDetailScreen(
-    uiState: SpotDetailUiState, // Garanta que seu UiState contenha mapEngine e mapZoom
+    uiState: SpotDetailUiState,
     showDeleteDialog: Boolean,
     isMapExpanded: Boolean,
     onNavigateBack: () -> Unit,
@@ -96,7 +93,6 @@ fun SpotDetailScreen(
                         }
                     },
                     actions = {
-                        // Oculta o botão de deletar se o spot ainda não carregou
                         if (!uiState.isLoading && uiState.spotWithImages != null) {
                             IconButton(onClick = onDeleteClick) {
                                 Icon(
@@ -135,7 +131,6 @@ fun SpotDetailScreen(
                 val spot = uiState.spotWithImages!!.spot
                 val images = uiState.spotWithImages!!.images
 
-                // NOTA: Para performance, mova essa formatação de data para a ViewModel
                 val formattedDate = remember(spot.visitDate) {
                     SimpleDateFormat("dd 'de' MMMM 'de' yyyy", Locale.forLanguageTag("pt-BR"))
                         .format(Date(spot.visitDate))
@@ -162,7 +157,6 @@ fun SpotDetailScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(18.dp)
                 ) {
-                    // Fotos em Carrossel Horizontal
                     if (images.isNotEmpty()) {
                         LazyRow(
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -180,13 +174,11 @@ fun SpotDetailScreen(
                         }
                     }
 
-                    // Título Principal
                     PicTravellyTitle(
                         text = spot.title,
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    // Metadados: Localização e Data
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -224,7 +216,6 @@ fun SpotDetailScreen(
                         }
                     }
 
-                    // MAPA PADRONIZADO (Preview Stateless)
                     PicTravellyPreviewMapCard(
                         currentLatitude = spot.latitude,
                         currentLongitude = spot.longitude,
@@ -233,10 +224,9 @@ fun SpotDetailScreen(
                         googleMapType = uiState.googleMapType,
                         markers = singleMarker,
                         onExpandClick = { onMapExpandedChange(true) },
-                        onMarkerSelect = { /* Ignorado na tela de detalhes */ }
+                        onMarkerSelect = {}
                     )
 
-                    // Relato do Diário
                     PicTravellyCard(
                         modifier = Modifier.fillMaxWidth(),
                         containerColor = MaterialTheme.colorScheme.surface
@@ -261,7 +251,6 @@ fun SpotDetailScreen(
             }
         }
 
-        // MAPA PADRONIZADO (Expandido sobre a Scaffold com animação M3 Expressive)
         AnimatedVisibility(
             visible = isMapExpanded && uiState.spotWithImages != null,
             enter = fadeIn(
@@ -312,7 +301,6 @@ fun SpotDetailScreen(
                 onClose = { onMapExpandedChange(false) },
                 onMarkerClick = { },
                 onZoomChange = onZoomChange,
-                // SLOT API: Card customizado para a tela de Detalhes
                 bottomContent = {
                     DetailSpotFloatingCard(
                         selectedSpot = uiState.spotWithImages,

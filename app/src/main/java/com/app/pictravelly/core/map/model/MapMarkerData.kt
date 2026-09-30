@@ -1,7 +1,7 @@
 package com.app.pictravelly.core.map.model
 
 /**
- * Modelo agnóstico de dados para marcadores (pins) no mapa.
+ * Representa um marcador exibido no mapa.
  */
 data class MapMarkerData(
     val id: Long,

@@ -32,10 +32,6 @@ import coil.compose.AsyncImage
 import com.app.pictravelly.core.database.model.touristSpot.TouristSpotWithImages
 
 
-/**
- * Card exibido no modo mapa expandido EXCLUSIVO para a tela de detalhes.
- * Note a ausência do botão "Abrir Diário", pois o usuário já está lendo ele.
- */
 @Composable
 fun DetailSpotFloatingCard(
     selectedSpot: TouristSpotWithImages?,

@@ -11,11 +11,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import com.app.pictravelly.core.utils.ImageStorageManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
 enum class DateField { START, END }
 
-/**
- * ROTA: Hospeda os launchers do Android e o estado efêmero de UI (Dialogs).
- */
 @Composable
 fun TripFormRoute(
     viewModel: TripFormViewModel,
@@ -24,14 +28,24 @@ fun TripFormRoute(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
-    // Controla se o calendário está aberto e qual campo ele afeta
     var openDateField by rememberSaveable { mutableStateOf<DateField?>(null) }
 
     val coverPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        uri?.let { viewModel.updateCoverImageUri(it.toString()) }
+        if (uri != null) {
+            coroutineScope.launch(Dispatchers.IO) {
+                val savedUri = ImageStorageManager.copyUriToInternalStorage(context, uri)
+                withContext(Dispatchers.Main) {
+                    if (savedUri != null) {
+                        viewModel.updateCoverImageUri(savedUri.toString())
+                    }
+                }
+            }
+        }
     }
 
     TripFormScreen(

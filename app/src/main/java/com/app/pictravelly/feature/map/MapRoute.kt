@@ -10,9 +10,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.app.pictravelly.core.di.AppViewModelProvider
 
-/**
- * ROTA: Responsável apenas pelas integrações com o SO (Permissões, GPS, ViewModel).
- */
 @Composable
 fun MapRoute(
     onNavigateToSpotDetail: (Long) -> Unit,
@@ -23,7 +20,6 @@ fun MapRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // Delega os dados puros para a tela visual
     MapScreen(
         uiState = uiState,
         contentPadding = contentPadding,

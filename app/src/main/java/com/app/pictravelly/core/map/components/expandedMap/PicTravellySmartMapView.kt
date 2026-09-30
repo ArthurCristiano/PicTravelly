@@ -41,24 +41,19 @@ fun PicTravellySmartMapView(
     onMapClick: (() -> Unit)? = null,
     topContent: @Composable (BoxScope.() -> Unit)? = null,
     bottomContent: @Composable (BoxScope.() -> Unit)? = null,
-    onFetchLocationRequested: () -> Unit = {}, // <--- Callback para a ViewModel buscar a localização
+    onFetchLocationRequested: () -> Unit = {},
     mapConfigViewModel: MapConfigViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val mapSettings by mapConfigViewModel.mapSettings.collectAsState()
     val centerTrigger by mapConfigViewModel.centerTrigger.collectAsState()
 
-    // 1. Instancia o rastreador de estado do GPS
     val locationStatus by rememberLocationStatus()
     val context = LocalContext.current
 
-    // 2. Launcher para pedir permissão no Android
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        // Se foi concedido, o rememberLocationStatus() vai notar sozinho e mudar para READY
-    }
+    ) { _ -> }
 
-    // 3. O SEGREDO: Se o usuário acabou de ligar o GPS ou deu permissão, busca a coordenada real!
     LaunchedEffect(locationStatus) {
         if (locationStatus == LocationStatus.READY) {
             onFetchLocationRequested()

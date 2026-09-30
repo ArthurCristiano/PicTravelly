@@ -36,10 +36,7 @@ import kotlin.math.min
 import kotlin.math.sin
 
 /**
- * Recorte "florzinha" usado como moldura dos ícones de ação.
- *
- * A borda é desenhada em coordenadas polares: o raio oscila suavemente em
- * torno de um círculo, o que gera as ondinhas sem precisar de curvas manuais.
+ * Moldura ondulada traçada em coordenadas polares variando o raio de um círculo.
  */
 data class ScallopedShape(
     private val petals: Int = 10,
@@ -75,11 +72,7 @@ data class ScallopedShape(
 }
 
 /**
- * Botão de ação em faixa, da mesma largura dos campos de texto do formulário.
- *
- * O ícone principal fica em destaque dentro do recorte florzinha, à esquerda,
- * com o rótulo ao lado. A ação secundária é opcional e vive dentro do mesmo
- * botão, à direita, com o próprio toque.
+ * Botão de ação com ícone principal à esquerda e suporte a ação secundária à direita.
  */
 @Composable
 fun PicTravellyActionTile(

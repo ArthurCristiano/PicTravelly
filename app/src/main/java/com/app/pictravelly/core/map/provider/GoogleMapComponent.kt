@@ -25,22 +25,19 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlin.math.abs
 
-/**
- * Componente de mapa baseado no Google Maps SDK otimizado para gestos de pinça e arraste.
- */
 @SuppressLint("UnrememberedMutableState")
 @Composable
 fun GoogleMapComponent(
     latitude: Double,
     longitude: Double,
-    zoom: Float, // <--- NECESSÁRIO para botões e estado inicial
+    zoom: Float,
     markers: List<MapMarkerData>,
     onMarkerClick: (MapMarkerData) -> Unit,
     modifier: Modifier = Modifier,
     isInteractive: Boolean = true,
     onMapClick: (() -> Unit)? = null,
     onLocationPick: ((Double, Double) -> Unit)? = null,
-    onZoomChange: ((Float) -> Unit)? = null, // <--- ADICIONADO PARA SALVAR A PINÇA
+    onZoomChange: ((Float) -> Unit)? = null,
     googleMapType: GoogleMapType = GoogleMapType.NORMAL,
     centerTrigger: Int = 0,
 ) {
@@ -53,29 +50,26 @@ fun GoogleMapComponent(
         position = CameraPosition.fromLatLngZoom(LatLng(latitude, longitude), zoom)
     }
 
-    // TRAVA DE SEGURANÇA: Impede que o cache inicial do Google Maps sobrescreva o DataStore
+    // Evita que o valor inicial da câmera sobrescreva as preferências salvas
     var skipFirstSync by remember {
         mutableStateOf(
             true
         )
     }
 
-    // 1. PAI -> FILHO (Botões +/- ou Banco de Dados): Anima se a ViewModel mandou
+    // Sincroniza zoom externo com a câmera
     LaunchedEffect(zoom) {
         if (abs(cameraPositionState.position.zoom - zoom) > 0.1f) {
             cameraPositionState.animate(CameraUpdateFactory.zoomTo(zoom))
         }
     }
 
-    // 2. FILHO -> PAI (Pinça do Usuário): Salva ao final do movimento
     LaunchedEffect(cameraPositionState.isMoving) {
-        // Ignora a montagem inicial da tela para não bugar ao trocar de abas
         if (skipFirstSync) {
             skipFirstSync = false
             return@LaunchedEffect
         }
 
-        // Só salva quando a câmera PARAR completamente
         if (!cameraPositionState.isMoving) {
             val currentCameraZoom = cameraPositionState.position.zoom
             if (abs(currentCameraZoom - zoom) > 0.1f) {
@@ -84,7 +78,7 @@ fun GoogleMapComponent(
         }
     }
 
-    // 3. Centralização da Câmera (Coordenadas ou Botão de Foco)
+    // Atualiza a posição da câmera ao mudar coordenadas ou acionar centralização
     LaunchedEffect(latitude, longitude, centerTrigger) {
         val currentTarget = cameraPositionState.position.target
         val latDiff = abs(currentTarget.latitude - latitude)
@@ -125,8 +119,6 @@ fun GoogleMapComponent(
         ),
     ) {
         markers.forEach { markerData ->
-
-            // CORREÇÃO CRUCIAL DAS CORES: Usando constantes HUE do próprio Google Maps
             val icon = when (markerData.type) {
                 MarkerType.USER_LOCATION -> BitmapDescriptorFactory.defaultMarker(
                     BitmapDescriptorFactory.HUE_AZURE

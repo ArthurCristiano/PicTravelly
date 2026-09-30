@@ -27,49 +27,43 @@ import com.app.pictravelly.feature.trips.TripsViewModel
 object AppViewModelProvider {
 
     val Factory = viewModelFactory {
-        // Inicializador do HomeViewModel
         initializer {
             HomeViewModel(
                 touristSpotRepository = picTravellyApplication().container.touristSpotRepository,
             )
         }
 
-        // Inicializador do SpotsViewModel
         initializer {
             SpotsViewModel(
                 repository = picTravellyApplication().container.touristSpotRepository
             )
         }
 
-        // Inicializador do TripsViewModel (aba Diário)
         initializer {
             TripsViewModel(
                 repository = picTravellyApplication().container.tripRepository
             )
         }
 
-        // Inicializador do MapViewModel (aba Mapa)
         initializer {
             MapViewModel(
                 touristSpotRepository = picTravellyApplication().container.touristSpotRepository,
             )
         }
 
-        // Inicializador do SettingsViewModel
         initializer {
             SettingsViewModel(
-                repository = picTravellyApplication().container.settingsRepository
+                repository = picTravellyApplication().container.settingsRepository,
+                touristSpotRepository = picTravellyApplication().container.touristSpotRepository
             )
         }
 
-        // Inicializador do MainActivityViewModel
         initializer {
             MainActivityViewModel(
                 settingsRepository = picTravellyApplication().container.settingsRepository
             )
         }
 
-        // Inicializador do MapConfigViewModel
         initializer {
             MapConfigViewModel(
                 settingsRepository = picTravellyApplication().container.settingsRepository
@@ -77,9 +71,6 @@ object AppViewModelProvider {
         }
     }
 
-    /**
-     * Factory personalizada para instanciar o SpotDetailViewModel com o spotId recebido pela rota.
-     */
     fun createSpotDetailFactory(
         spotId: Long,
         spotRepository: TouristSpotRepository,
@@ -100,10 +91,6 @@ object AppViewModelProvider {
         }
     }
 
-    /**
-     * Factory do detalhe da viagem, que precisa do tripId da rota e dos dois
-     * repositórios (a viagem em si e os pontos que ela agrupa).
-     */
     fun createTripDetailFactory(
         tripId: Long,
         tripRepository: TripRepository,
@@ -124,9 +111,6 @@ object AppViewModelProvider {
         }
     }
 
-    /**
-     * Factory do formulário de viagem. Recebe NO_TRIP_ID para criar uma nova.
-     */
     fun createTripFormFactory(
         tripId: Long,
         tripRepository: TripRepository
@@ -145,10 +129,6 @@ object AppViewModelProvider {
         }
     }
 
-    /**
-     * Factory do formulário de ponto turístico.
-     * Exige o SettingsRepository para o controle do mapa interno do formulário.
-     */
     fun createSpotFormFactory(
         tripId: Long,
         spotRepository: TouristSpotRepository,
@@ -172,8 +152,5 @@ object AppViewModelProvider {
     }
 }
 
-/**
- * Função de extensão que recupera a instância da aplicação PicTravellyApp a partir de CreationExtras.
- */
 fun CreationExtras.picTravellyApplication(): PicTravellyApp =
     (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PicTravellyApp)

@@ -9,9 +9,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.app.pictravelly.core.di.AppViewModelProvider
 
-/**
- * ROTA: Responsável exclusiva por interligar o ViewModel e fornecer dados para a UI.
- */
 @Composable
 fun TripsRoute(
     onNavigateToTripDetail: (Long) -> Unit,

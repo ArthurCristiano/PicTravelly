@@ -67,7 +67,6 @@ fun OsmMapComponent(
 
     var activeMapView by remember { mutableStateOf<MapView?>(null) }
 
-    // O OpenStreetMap opera com sua camada vetorial padrão mundial oficial (MAPNIK)
     val tileSource: ITileSource = TileSourceFactory.MAPNIK
 
     LaunchedEffect(zoom) {
@@ -77,16 +76,13 @@ fun OsmMapComponent(
         }
     }
 
-    // ÚNICO GATILHO DE MOVIMENTO:
-    // Dispara a animação sempre que mudar lat/long externamente OU o gatilho do botão for acionado
+    // Anima a câmera quando as coordenadas mudam ou o gatilho é acionado
     LaunchedEffect(latitude, longitude, centerTrigger) {
         val map = activeMapView ?: return@LaunchedEffect
         val currentCenter = map.mapCenter
         val latDiff = abs(currentCenter.latitude - latitude)
         val lonDiff = abs(currentCenter.longitude - longitude)
 
-        // Evita chamadas de animação desnecessárias se o mapa já estiver no lugar certo
-        // (mas força a ida se o trigger de centralizar tiver sido acionado)
         if (latDiff > 0.0001 || lonDiff > 0.0001 || centerTrigger > 0) {
             map.controller.animateTo(GeoPoint(latitude, longitude))
         }
@@ -146,14 +142,11 @@ fun OsmMapComponent(
         },
         modifier = modifier,
         update = { map ->
-            // Atualiza a fonte do tile se o usuário mudou a configuração nas preferências
             if (map.tileProvider.tileSource.name() != tileSource.name()) {
                 map.setTileSource(tileSource)
             }
 
             map.setMultiTouchControls(isInteractive)
-
-            // Remove marcadores anteriores de forma limpa
             map.overlays.removeAll { it is Marker }
 
             markers.forEach { markerData ->
@@ -163,7 +156,6 @@ fun OsmMapComponent(
                     snippet = markerData.snippet
                     setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
 
-                    // Customização Visual do OSM
                     when (markerData.type) {
                         MarkerType.USER_LOCATION -> {
                             val defaultIcon = ContextCompat.getDrawable(

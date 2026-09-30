@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** Estado provisório do que o usuário digita na tela. */
 private data class SpotFormTransientState(
     val title: String = "",
     val description: String = "",
@@ -38,7 +37,6 @@ private data class SpotFormTransientState(
     val errorMessage: String? = null
 )
 
-/** Estado consolidado que a View consome. */
 data class SpotFormUiState(
     val title: String = "",
     val description: String = "",
@@ -64,7 +62,7 @@ data class SpotFormUiState(
 class SpotFormViewModel(
     private val repository: TouristSpotRepository,
     tripRepository: TripRepository,
-    settingsRepository: SettingsRepository, // Injetado para ler a engine global
+    settingsRepository: SettingsRepository,
     initialTripId: Long = DestinationScreen.NO_TRIP_ID
 ) : ViewModel() {
 
@@ -177,8 +175,18 @@ class SpotFormViewModel(
     }
 
     fun addImageUri(uri: String) {
-        if (!_transientState.value.imageUris.contains(uri)) {
+        val current = _transientState.value.imageUris
+        if (current.size < 5 && !current.contains(uri)) {
             _transientState.update { it.copy(imageUris = it.imageUris + uri) }
+        }
+    }
+
+    fun addImageUris(uris: List<String>) {
+        val current = _transientState.value.imageUris
+        val availableSlots = (5 - current.size).coerceAtLeast(0)
+        val toAdd = uris.filter { !current.contains(it) }.take(availableSlots)
+        if (toAdd.isNotEmpty()) {
+            _transientState.update { it.copy(imageUris = it.imageUris + toAdd) }
         }
     }
 
@@ -191,7 +199,7 @@ class SpotFormViewModel(
             setErrorMessage("Título e Localização são obrigatórios.")
             return
         }
-        if (currentState.isSaving) return // Previne duplos cliques
+        if (currentState.isSaving) return
 
         viewModelScope.launch {
             _transientState.update { it.copy(isSaving = true) }

@@ -12,11 +12,9 @@ import androidx.compose.ui.text.style.TextOverflow
 fun PicTravellyText(
     text: String,
     modifier: Modifier = Modifier,
-    // Cor neutra de alta legibilidade para corpos de texto
     color: Color = MaterialTheme.colorScheme.onSurface,
     textAlign: TextAlign? = null,
     maxLines: Int = Int.MAX_VALUE,
-    // Permite trocar entre BodyLarge (descrições) e BodyMedium (datas, locais menores)
     isSmall: Boolean = false
 ) {
     Text(

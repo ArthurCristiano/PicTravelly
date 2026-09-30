@@ -35,9 +35,7 @@ import com.app.pictravelly.core.map.PicTravellyMap
 import com.app.pictravelly.core.map.model.MapMarkerData
 
 /**
- * Card de mapa genérico reutilizável em todo o aplicativo.
- * A persistência do zoom e a escolha da engine são tratadas internamente pelo PicTravellyMap caso não fornecidas.
- * STATELESS: Recebe engine e zoom estritamente da tela que o hospeda.
+ * Card de pré-visualização de mapa com botão para expandir.
  */
 @Composable
 fun PicTravellyPreviewMapCard(
@@ -68,12 +66,11 @@ fun PicTravellyPreviewMapCard(
                     onMarkerSelect(marker.id)
                 },
                 modifier = Modifier.fillMaxSize(),
-                isInteractive = false, // Miniaturas em listas NUNCA devem roubar o scroll da tela principal
+                isInteractive = false, // Desabilita interação na miniatura para permitir o scroll da lista
                 onMapClick = onExpandClick,
                 googleMapType = googleMapType
             )
 
-            // Botão de expandir no topo direito
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
@@ -91,7 +88,6 @@ fun PicTravellyPreviewMapCard(
                 }
             }
 
-            // Tag de exploração inferior
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomStart)

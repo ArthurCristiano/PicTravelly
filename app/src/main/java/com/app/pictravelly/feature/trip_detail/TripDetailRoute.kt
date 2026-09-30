@@ -9,9 +9,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
-/**
- * ROTA: Responsável pelo Contexto, ViewModels e navegação.
- */
 @Composable
 fun TripDetailRoute(
     viewModel: TripDetailViewModel,
@@ -23,7 +20,6 @@ fun TripDetailRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // Sobrevive à rotação de tela do aparelho
     var showDeleteTripDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(uiState.wasDeleted) {

@@ -6,9 +6,6 @@ import com.app.pictravelly.core.di.AppContainer
 import com.app.pictravelly.core.di.DefaultAppContainer
 import org.osmdroid.config.Configuration
 
-/**
- * Application class onde inicializamos a Injeção de Dependência Manual via AppContainer.
- */
 class PicTravellyApp : Application() {
 
     lateinit var container: AppContainer

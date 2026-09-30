@@ -65,7 +65,6 @@ fun SpotPageCard(
                         AsyncImage(
                             model = image.imageUri,
                             contentDescription = spot.title,
-                            // CORREÇÃO: Design responsivo que se ajusta a telas grandes e pequenas sem vazar
                             modifier = Modifier
                                 .height(190.dp)
                                 .fillParentMaxWidth(if (spotWithImages.images.size == 1) 1f else 0.85f),

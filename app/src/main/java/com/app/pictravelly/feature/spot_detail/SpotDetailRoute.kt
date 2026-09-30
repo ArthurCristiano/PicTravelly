@@ -8,9 +8,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
-/**
- * ROTA: Gerencia ViewModels, Contexto, Estados Transitórios de Dialog e Navegação.
- */
 @Composable
 fun SpotDetailRoute(
     viewModel: SpotDetailViewModel,

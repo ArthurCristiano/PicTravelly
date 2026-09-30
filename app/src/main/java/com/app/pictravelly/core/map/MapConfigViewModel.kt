@@ -17,7 +17,6 @@ class MapConfigViewModel(
     private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
-    // Lê diretamente o DataStore para qualquer tela que usar o mapa
     val mapSettings = settingsRepository.userDataStream.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),

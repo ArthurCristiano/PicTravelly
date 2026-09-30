@@ -29,7 +29,7 @@ fun HomeRoute(
         onMapExpandedChange?.invoke(uiState.isMapExpanded)
     }
 
-    // Delegação do botão voltar do hardware para recolher o mapa
+    // Recolhe o mapa expandido ao pressionar voltar
     BackHandler(enabled = uiState.isMapExpanded) {
         viewModel.setMapExpanded(false)
     }

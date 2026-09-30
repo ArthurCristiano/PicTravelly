@@ -47,10 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 /**
- * Representação de cada atalho do Dock One UI 9.
- *
- * O botão central de cadastro não entra nesta lista: ele não é uma rota,
- * apenas abre a folha de escolha entre nova viagem e novo ponto turístico.
+ * Destinos disponíveis na barra de navegação inferior.
  */
 sealed class DockDestination(
     val route: String,
@@ -63,16 +60,12 @@ sealed class DockDestination(
     object Settings : DockDestination("settings_route", "Ajustes", Icons.Default.Settings)
 
     companion object {
-        /** Duas abas à esquerda do "+" e duas à direita. */
         val items = listOf(Home, Trips, Map, Settings)
     }
 }
 
 /**
- * Dock Pill-Shaped flutuante com acabamento translúcido (Frosted Glass) inspirado no One UI 9.
- *
- * Cada atalho mostra o ícone com o rótulo logo abaixo, o que mantém os quatro
- * destinos e o botão central de cadastro confortáveis na mesma linha.
+ * Barra de navegação inferior com atalhos e botão central de ação rápida.
  */
 @Composable
 fun PicTravellyOneUiDock(
@@ -92,7 +85,6 @@ fun PicTravellyOneUiDock(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Superfície translúcida One UI 9 com cantos em pílula
         Surface(
             modifier = Modifier
                 .shadow(
@@ -110,7 +102,7 @@ fun PicTravellyOneUiDock(
                     shape = CircleShape
                 ),
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.82f) // Frosted glass translucency
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.82f)
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
@@ -147,9 +139,6 @@ fun PicTravellyOneUiDock(
     }
 }
 
-/**
- * Botão central de cadastro, em destaque sobre a cor primária.
- */
 @Composable
 private fun DockAddButton(onClick: () -> Unit) {
     Box(
@@ -180,9 +169,6 @@ private fun DockAddButton(onClick: () -> Unit) {
     }
 }
 
-/**
- * Atalho individual do dock: ícone com o rótulo logo abaixo.
- */
 @Composable
 private fun DockItem(
     item: DockDestination,

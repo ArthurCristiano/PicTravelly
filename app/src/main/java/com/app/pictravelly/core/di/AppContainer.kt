@@ -38,7 +38,6 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
 
     override val settingsRepository: SettingsRepository by lazy {
         PreferencesSettingsRepository(
-            // Utiliza o delegate que agora mora no core/datastore
             dataStore = context.dataStore
         )
     }

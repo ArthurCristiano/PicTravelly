@@ -63,9 +63,7 @@ fun PicTravellySmartPreviewMapCard(
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        // O rememberLocationStatus() nota sozinho e muda para READY
-    }
+    ) { _ -> }
 
     LaunchedEffect(locationStatus) {
         if (locationStatus == LocationStatus.READY) {
@@ -85,11 +83,11 @@ fun PicTravellySmartPreviewMapCard(
         return
     }
 
-    // Usamos fillMaxWidth e a altura exata para conter o mapa e os elementos flutuantes
-    Box(modifier = modifier
-        .fillMaxWidth()
-        .height(260.dp)) {
-
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(260.dp)
+    ) {
         PicTravellyPreviewMapCard(
             currentLatitude = currentLatitude,
             currentLongitude = currentLongitude,
@@ -99,11 +97,9 @@ fun PicTravellySmartPreviewMapCard(
             markers = markers,
             onExpandClick = onExpandClick,
             onMarkerSelect = onMarkerSelect,
-            // Preenche o Box completamente
             modifier = Modifier.fillMaxSize()
         )
 
-        // Chip de Aviso Minimalista injetado no Canto Superior Esquerdo
         CompactLocationWarningChip(
             status = locationStatus,
             onClick = {
@@ -120,14 +116,11 @@ fun PicTravellySmartPreviewMapCard(
             },
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(12.dp) // Substitui o padding de 90dp pelo espaçamento padrão das bordas
+                .padding(12.dp)
         )
     }
 }
 
-/**
- * Componente minimalista para exibir alertas críticos sem poluir o Preview Card.
- */
 @Composable
 private fun CompactLocationWarningChip(
     status: LocationStatus,

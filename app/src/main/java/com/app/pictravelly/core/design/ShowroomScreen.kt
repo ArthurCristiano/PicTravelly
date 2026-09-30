@@ -82,13 +82,8 @@ fun ShowroomScreen() {
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                // 1. Aplica APENAS o recuo da TopAppBar na tela inteira
                 .padding(top = paddingValues.calculateTopPadding())
-                // 2. Permite a rolagem
                 .verticalScroll(rememberScrollState())
-                // 3. Aplica o recuo da BottomBar como um "respiro" no final do conteúdo.
-                // Isso faz com que o texto passe atrás da barra flutuante quando está rolando,
-                // mas quando chega no final da lista, ele para em um espaço seguro acima da barra.
                 .padding(
                     bottom = paddingValues.calculateBottomPadding() + 16.dp,
                     start = 16.dp,
@@ -96,7 +91,6 @@ fun ShowroomScreen() {
                 ),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // Seção de Tipografia
             SectionTitle("Tipografia")
             Text(
                 "Headline Large",
@@ -116,7 +110,6 @@ fun ShowroomScreen() {
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-            // Seção de Botões
             SectionTitle("Ações (Botões)")
             Button(
                 onClick = { },
@@ -136,7 +129,6 @@ fun ShowroomScreen() {
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-            // Seção de Cards
             SectionTitle("Superfícies e Cards")
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -156,7 +148,6 @@ fun ShowroomScreen() {
                 }
             }
 
-            // Exemplo de componente de Erro
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(

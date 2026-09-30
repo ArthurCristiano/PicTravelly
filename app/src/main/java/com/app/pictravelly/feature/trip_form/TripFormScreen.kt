@@ -42,9 +42,6 @@ import com.app.pictravelly.feature.trip_form.components.DateFieldButton
 import com.app.pictravelly.feature.trip_form.components.TripCoverPicker
 import com.app.pictravelly.feature.trip_form.components.TripDatePickerDialog
 
-/**
- * TELA: Estritamente visual. Consome estado formatado e emite eventos para a Rota.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripFormScreen(

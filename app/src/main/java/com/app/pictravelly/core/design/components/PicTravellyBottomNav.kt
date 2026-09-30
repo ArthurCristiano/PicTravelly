@@ -44,14 +44,10 @@ fun PicTravellyFloatingNavBar(
     modifier: Modifier = Modifier
 ) {
     Surface(
-
         modifier = modifier
-            // 1. PRIMEIRO repila o tamanho da barra do sistema operacional (botões ou gestos)
             .navigationBarsPadding()
-            // 2. DEPOIS aplique o seu recuo estético para que a barra "flutue"
             .padding(horizontal = 16.dp, vertical = 24.dp)
             .fillMaxWidth()
-            // 3. Troca de height fixo para heightIn (proteção de acessibilidade para textos grandes)
             .heightIn(min = 24.dp),
         shape = CircleShape,
         color = MaterialTheme.colorScheme.surface,
@@ -82,13 +78,11 @@ private fun NavBarItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    // Animação de transição de cor de fundo
     val backgroundColor by animateColorAsState(
         targetValue = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
         animationSpec = tween(durationMillis = 300), label = "background_color"
     )
 
-    // Animação de cor do ícone/texto
     val contentColor by animateColorAsState(
         targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
         animationSpec = tween(durationMillis = 300), label = "content_color"
@@ -100,7 +94,7 @@ private fun NavBarItem(
             .background(backgroundColor)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null, // Remove o ripple nativo redondo para não bugar a pílula
+                indication = null,
                 onClick = onClick
             )
             .padding(horizontal = 16.dp, vertical = 12.dp)
@@ -111,7 +105,7 @@ private fun NavBarItem(
         ) {
             Icon(
                 imageVector = destination.icon,
-                contentDescription = destination.title, // Pode ser trocado por stringResource no futuro
+                contentDescription = destination.title,
                 tint = contentColor,
                 modifier = Modifier.size(24.dp)
             )

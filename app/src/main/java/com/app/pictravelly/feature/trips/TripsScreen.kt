@@ -30,9 +30,6 @@ import com.app.pictravelly.feature.trips.components.EmptyTripsPlaceholder
 import com.app.pictravelly.feature.trips.components.LooseSpotsItem
 import com.app.pictravelly.feature.trips.components.TripJournalItem
 
-/**
- * TELA: 100% Visual. Não formata datas nem conhece Entidades do Room.
- */
 @Composable
 fun TripsScreen(
     uiState: TripsUiState,

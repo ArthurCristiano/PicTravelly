@@ -5,9 +5,6 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-/**
- * Entidade de imagem atrelada a um ponto turístico com exclusão em cascata.
- */
 @Entity(
     tableName = "spot_images",
     foreignKeys = [

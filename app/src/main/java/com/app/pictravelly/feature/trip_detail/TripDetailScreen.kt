@@ -35,9 +35,6 @@ import com.app.pictravelly.feature.trip_detail.components.EmptySpotsInTripPlaceh
 import com.app.pictravelly.feature.trip_detail.components.SpotPageCard
 import com.app.pictravelly.feature.trip_detail.components.TripHeaderCard
 
-/**
- * TELA: Puramente Visual. Não lida com ViewModels nem navegação (apenas repassa cliques).
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripDetailScreen(

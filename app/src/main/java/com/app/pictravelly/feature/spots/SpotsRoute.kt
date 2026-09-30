@@ -9,9 +9,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.app.pictravelly.core.di.AppViewModelProvider
 
-/**
- * ROTA: Responsável apenas pela injeção da ViewModel e delegação de eventos.
- */
 @Composable
 fun SpotsRoute(
     onNavigateToDetail: (Long) -> Unit,

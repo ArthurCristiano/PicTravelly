@@ -13,9 +13,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Preview
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -27,23 +29,20 @@ import com.app.pictravelly.core.design.components.PicTravellyTitle
 import com.app.pictravelly.core.database.model.settings.MapEngineType
 import com.app.pictravelly.core.design.theme.PicTravellyTheme
 import com.app.pictravelly.feature.settings.components.SettingsAboutCard
+import com.app.pictravelly.feature.settings.components.SettingsActionRow
 import com.app.pictravelly.feature.settings.components.SettingsRadioRow
 import com.app.pictravelly.feature.settings.components.SettingsSection
 
 @Composable
 fun SettingsScreen(
-    uiState: SettingsUiState, // Recebe apenas os dados prontos
+    uiState: SettingsUiState,
     contentPadding: PaddingValues,
     onThemeChange: (AppTheme) -> Unit,
     onMapEngineChange: (MapEngineType) -> Unit,
     onMapTypeChange: (GoogleMapType) -> Unit,
+    onExportPhotos: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // ============================================================================
-    // 🎨 [DESIGN / HUMBERTO] - TELA DE PREFERÊNCIAS E MENU:
-    // - Humberto: você pode aplicar agrupamentos visuais elegantes, divisores de couro
-    //   ou texturas de diário nas seções de opções.
-    // ============================================================================
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -55,7 +54,6 @@ fun SettingsScreen(
     ) {
         PicTravellyTitle(text = "Configurações")
 
-        // Seção: Aparência e Tema
         SettingsSection(title = "Aparência", icon = Icons.Default.Palette) {
             AppTheme.entries.forEach { theme ->
                 val themeLabel = when (theme) {
@@ -70,7 +68,6 @@ fun SettingsScreen(
             }
         }
 
-        // Seção: Motor e Provedor de Mapa
         SettingsSection(title = "Provedor de Mapa", icon = Icons.Default.Map) {
             MapEngineType.entries.forEach { engine ->
                 SettingsRadioRow(
@@ -80,7 +77,6 @@ fun SettingsScreen(
             }
         }
 
-        // Seção: Tipos de Mapa (disponível apenas para Google Maps)
         AnimatedVisibility(visible = uiState.selectedMapEngine == MapEngineType.GOOGLE_MAPS) {
             SettingsSection(title = "Tipo de mapa (Google Maps)", icon = Icons.Default.Preview) {
                 GoogleMapType.entries.forEach { type ->
@@ -97,9 +93,18 @@ fun SettingsScreen(
             }
         }
 
-        // Seção: Sobre
+        SettingsSection(title = "Backup e Exportação", icon = Icons.Default.Archive) {
+            SettingsActionRow(
+                title = "Exportar fotos do diário (.zip)",
+                subtitle = "Gera um backup compactado com as fotos salvas para envio a outros apps",
+                icon = Icons.Default.Share,
+                isLoading = uiState.isExporting,
+                onClick = onExportPhotos
+            )
+        }
+
         SettingsAboutCard(
-            appVersion = "1.0 (Build 2026)" // Pode ser trocado por BuildConfig.VERSION_NAME depois
+            appVersion = "1.0 (Build 2026)"
         )
 
         Spacer(modifier = Modifier.height(72.dp))
@@ -114,19 +119,18 @@ fun SettingsScreen(
 )
 @Composable
 private fun SettingsScreenPreview() {
-    // 1. Envolve o Preview com o Design System do seu app
-    PicTravellyTheme { // Substitua por PicTravellyTheme { se existir
+    PicTravellyTheme {
         SettingsScreen(
             uiState = SettingsUiState(
                 selectedTheme = AppTheme.SYSTEM,
                 selectedGoogleMapType = GoogleMapType.NORMAL,
-                // Assumindo que a Engine padrão seja instanciável diretamente
                 selectedMapEngine = MapEngineType.entries.first()
             ),
             contentPadding = PaddingValues(0.dp),
             onThemeChange = {},
             onMapEngineChange = {},
-            onMapTypeChange = {}
+            onMapTypeChange = {},
+            onExportPhotos = {}
         )
     }
 }

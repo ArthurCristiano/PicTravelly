@@ -19,7 +19,6 @@ import java.time.ZoneOffset
 import java.util.Date
 import java.util.Locale
 
-/** Estado transitório puro contendo os valores originais. */
 private data class TripFormTransientState(
     val title: String = "",
     val description: String = "",
@@ -32,7 +31,6 @@ private data class TripFormTransientState(
     val errorMessage: String? = null
 )
 
-/** Estado da UI formatado e pronto para renderização. */
 data class TripFormUiState(
     val title: String = "",
     val description: String = "",
@@ -56,10 +54,8 @@ class TripFormViewModel(
     private val isEditing = tripId != DestinationScreen.NO_TRIP_ID
     private val dateFormat = SimpleDateFormat("dd 'de' MMMM, yyyy", Locale.forLanguageTag("pt-BR"))
 
-    // Mantemos os valores brutos protegidos aqui
     private val _transientState = MutableStateFlow(TripFormTransientState(isEditing = isEditing))
 
-    // A UI consome apenas este fluxo com os dados já mastigados
     val uiState: StateFlow<TripFormUiState> = _transientState.map { state ->
         val hasValidPeriod = state.endDate == null || state.endDate >= state.startDate
 
@@ -113,7 +109,7 @@ class TripFormViewModel(
         }
     }
 
-    // Conversões de fuso horário isoladas na ViewModel
+    // Conversão de fuso horário para compatibilidade com o DatePicker
     private fun localToUtcMillis(millis: Long): Long =
         Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate()
             .atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
@@ -130,7 +126,7 @@ class TripFormViewModel(
 
     fun updateCoverImageUri(uri: String?) = _transientState.update { it.copy(coverImageUri = uri) }
 
-    // O DatePicker devolve UTC, a ViewModel salva como Local Time
+    // O DatePicker opera em UTC; o modelo armazena no horário local
     fun updateStartDateFromUtc(utcMillis: Long) = _transientState.update {
         it.copy(startDate = utcToLocalMillis(utcMillis), errorMessage = null)
     }

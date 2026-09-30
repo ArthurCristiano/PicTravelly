@@ -17,15 +17,12 @@ fun PicTravellyCard(
     modifier: Modifier = Modifier,
     containerColor: Color = MaterialTheme.colorScheme.surface,
     onClick: (() -> Unit)? = null,
-    // Slot API: Delega a construção interna para a tela que chama o card
     content: @Composable ColumnScope.() -> Unit
 ) {
-    // Trava o formato visual de todos os cards da marca em 16dp
     val cardShape = RoundedCornerShape(16.dp)
     val cardElevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
     val cardColors = CardDefaults.cardColors(containerColor = containerColor)
 
-    // Avalia se o card possui ação de clique ou se é apenas exibição visual
     if (onClick != null) {
         ElevatedCard(
             onClick = onClick,

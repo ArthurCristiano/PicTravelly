@@ -22,7 +22,7 @@ import com.app.pictravelly.core.location.model.LocationStatus
 
 
 /**
- * Hook reativo que escuta as permissões e o rádio do GPS em tempo real.
+ * Monitora o estado de permissão e disponibilidade do provedor de localização.
  */
 @Composable
 fun rememberLocationStatus(): State<LocationStatus> {
@@ -79,9 +79,9 @@ fun rememberLocationStatus(): State<LocationStatus> {
         }
     }
 
-    // Escuta liga/desliga do GPS diretamente da barra de tarefas do Android
+    // Escuta mudanças de estado dos provedores de localização do sistema.
     DisposableEffect(context) {
-        checkStatus() // Verificação inicial
+        checkStatus()
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 if (intent?.action == LocationManager.PROVIDERS_CHANGED_ACTION) {

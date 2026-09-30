@@ -23,9 +23,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 
-/**
- * Item individual da lista de legendas.
- */
 @Composable
 fun LegendListItem(
     title: String,
@@ -57,7 +54,6 @@ fun LegendListItem(
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1
             )
-            // Formata as coordenadas para ficarem visualmente agradáveis e caberem no card
             Text(
                 text = "Lat: ${"%.4f".format(latitude)} | Lng: ${"%.4f".format(longitude)}",
                 style = MaterialTheme.typography.labelSmall,

@@ -11,11 +11,7 @@ import java.util.Locale
 import kotlin.coroutines.resume
 
 /**
- * Utilitário que converte geocódigos (latitude/longitude) em um endereço textual
- * usando a API de geocodificação reversa do Android.
- *
- * O endereço resolvido é gravado junto do ponto turístico, então continua
- * visível offline depois de consultado uma vez.
+ * Converte coordenadas geográficas em endereço textual usando a API do Android.
  */
 object GeocodingHelper {
 
@@ -24,8 +20,7 @@ object GeocodingHelper {
     fun isAvailable(): Boolean = Geocoder.isPresent()
 
     /**
-     * Devolve o endereço por extenso, ou null quando o serviço não está
-     * disponível, não há conexão ou nada foi encontrado para as coordenadas.
+     * Retorna o endereço formatado ou null em caso de indisponibilidade ou falha.
      */
     suspend fun getAddressFromCoordinates(
         context: Context,
@@ -45,7 +40,7 @@ object GeocodingHelper {
         longitude: Double
     ): List<Address> {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // A partir do Android 13 a consulta é assíncrona por callback.
+            // No Android 13+ a consulta ao Geocoder é assíncrona via callback.
             suspendCancellableCoroutine { continuation ->
                 geocoder.getFromLocation(latitude, longitude, MAX_RESULTS) { result ->
                     if (continuation.isActive) continuation.resume(result)
@@ -59,11 +54,7 @@ object GeocodingHelper {
         }
     }
 
-    /**
-     * Monta um texto curto no formato "Bairro, Cidade - UF", que é o que o campo
-     * "Cidade / Região" do formulário espera. Cai para a linha completa que a
-     * API devolve quando esses campos vêm vazios.
-     */
+    // Formata o endereço como "Bairro, Cidade - UF", com fallback para getAddressLine(0).
     private fun format(address: Address): String? {
         val neighborhood = address.subLocality?.takeIf { it.isNotBlank() }
         val city = (address.locality ?: address.subAdminArea)?.takeIf { it.isNotBlank() }

@@ -12,9 +12,6 @@ import com.app.pictravelly.core.database.model.touristSpot.TouristSpotEntity
 import com.app.pictravelly.core.database.model.touristSpot.TouristSpotWithImages
 import kotlinx.coroutines.flow.Flow
 
-/**
- * Data Access Object para TouristSpot e SpotImages.
- */
 @Dao
 interface TouristSpotDao {
 

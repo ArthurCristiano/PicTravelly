@@ -32,7 +32,6 @@ data class HomeUiState(
     val currentLongitude: Double = LocationHelper.DEFAULT_LONGITUDE,
     val isLoadingLocation: Boolean = true
 ) {
-    // Geração reativa dos marcadores (Pontos + Usuário)
     val markers: List<MapMarkerData>
         get() {
             val spotMarkers = spots.map { spotWithImages ->
@@ -86,7 +85,6 @@ class HomeViewModel(
 
     private val _transientState = MutableStateFlow(HomeTransientState())
 
-    // Combina apenas o Banco de Dados (Room) com as ações da tela
     val uiState: StateFlow<HomeUiState> = combine(
         touristSpotRepository.getAllSpotsStream(),
         _transientState

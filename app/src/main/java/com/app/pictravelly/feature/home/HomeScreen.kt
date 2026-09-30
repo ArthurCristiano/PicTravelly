@@ -70,8 +70,6 @@ fun HomeScreen(
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier.fillMaxSize()) {
-
-        // Modo Normal: Dashboard Rolável
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -81,10 +79,7 @@ fun HomeScreen(
                 .padding(horizontal = 16.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            HomeHeaderSection(
-                totalSpots = uiState.totalSpotsCount,
-                travelerLevel = uiState.travelerLevel
-            )
+            HomeHeaderSection()
 
             HomeGamificationCard(
                 travelerLevel = uiState.travelerLevel,
@@ -95,7 +90,7 @@ fun HomeScreen(
             PicTravellySmartPreviewMapCard(
                 currentLatitude = uiState.currentLatitude,
                 currentLongitude = uiState.currentLongitude,
-                markers = uiState.markers, // <--- Usa diretamente da UiState
+                markers = uiState.markers,
                 onExpandClick = { onMapExpandedChange(true) },
                 onMarkerSelect = { markerId ->
                     val selected = uiState.spots.firstOrNull { it.spot.id == markerId }
@@ -120,7 +115,6 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(72.dp))
         }
 
-        // Modo Mapa Expandido Padronizado (Sobrepondo a Home com expansão orgânica estilo Container Transform)
         AnimatedVisibility(
             visible = uiState.isMapExpanded,
             enter = fadeIn(

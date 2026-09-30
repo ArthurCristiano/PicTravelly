@@ -11,11 +11,11 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
 /**
- * Utilitário para captura segura e graciosa da localização atual do dispositivo.
+ * Utilitário para obtenção da localização atual do dispositivo.
  */
 object LocationHelper {
 
-    // Coordenadas neutras de fallback caso sem GPS ou permissão (ex: Marco Zero de Brasília)
+    // Coordenadas padrão de fallback quando o GPS ou permissão estiverem indisponíveis (Brasília).
     const val DEFAULT_LATITUDE = -15.793889
     const val DEFAULT_LONGITUDE = -47.882778
 

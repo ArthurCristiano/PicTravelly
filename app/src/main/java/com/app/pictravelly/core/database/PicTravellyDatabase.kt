@@ -10,9 +10,6 @@ import com.app.pictravelly.core.database.model.touristSpot.SpotImageEntity
 import com.app.pictravelly.core.database.model.touristSpot.TouristSpotEntity
 import com.app.pictravelly.core.database.model.trip.TripEntity
 
-/**
- * Banco de dados principal Room da aplicação.
- */
 @Database(
     entities = [TripEntity::class, TouristSpotEntity::class, SpotImageEntity::class],
     version = 2,

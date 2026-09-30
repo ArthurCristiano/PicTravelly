@@ -11,9 +11,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/**
- * Modelo de dados ultraleve para a UI consumir, livre de dependências do Room.
- */
 data class TripItemUiModel(
     val id: Long,
     val title: String,
@@ -23,9 +20,6 @@ data class TripItemUiModel(
     val spotsCount: Int
 )
 
-/**
- * Estado consolidado e formatado da aba Diário.
- */
 data class TripsUiState(
     val trips: List<TripItemUiModel> = emptyList(),
     val looseSpotsCount: Int = 0,
@@ -49,7 +43,6 @@ class TripsViewModel(
         repository.getSpotsWithoutTripStream()
     ) { trips, looseSpots ->
 
-        // Formata e mapeia todos os dados na camada de negócio, poupando a View
         val mappedTrips = trips.map { tripWithSpots ->
             val trip = tripWithSpots.trip
             TripItemUiModel(

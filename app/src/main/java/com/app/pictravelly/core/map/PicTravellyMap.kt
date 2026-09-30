@@ -32,15 +32,14 @@ import com.app.pictravelly.core.map.provider.OsmMapComponent
 import kotlin.math.roundToInt
 
 /**
- * Componente Facade Universal de Mapa para o PicTravelly.
- * STATELESS: Não possui dependência de banco de dados ou ViewModel.
+ * Componente de mapa que delega a renderização para OSM ou Google Maps.
  */
 @Composable
 fun PicTravellyMap(
     latitude: Double,
     longitude: Double,
-    engine: MapEngineType, // Obrigatório
-    zoom: Float, // Obrigatório
+    engine: MapEngineType,
+    zoom: Float,
     modifier: Modifier = Modifier,
     markers: List<MapMarkerData> = emptyList(),
     onMarkerClick: (MapMarkerData) -> Unit = {},
@@ -52,7 +51,6 @@ fun PicTravellyMap(
     centerTrigger: Int = 0
 ) {
     Box(modifier = modifier) {
-        // Renderização do motor de mapa
         when (engine) {
             MapEngineType.OSM -> {
                 OsmMapComponent(
@@ -89,7 +87,6 @@ fun PicTravellyMap(
             }
         }
 
-        // Camada de Interface Customizada (Zoom)
         if (isInteractive) {
             Column(
                 modifier = Modifier
@@ -98,7 +95,7 @@ fun PicTravellyMap(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // CORREÇÃO UX: Normaliza o zoom! (3.0 é o limite do Google Maps, então 3 = 0% e 20 = 100%)
+                // Escala percentual de zoom entre 3f (0%) e 20f (100%)
                 val normalizedZoom = (zoom - 3f).coerceIn(0f, 17f)
                 val zoomPercentage = ((normalizedZoom / 17f) * 100).roundToInt()
 
@@ -132,7 +129,6 @@ fun PicTravellyMap(
                 }
 
                 IconButton(
-                    // CORREÇÃO: Impede que o botão tente enviar um zoom menor que 3f para a ViewModel
                     onClick = { onZoomChange?.invoke((zoom - 1f).coerceAtLeast(3f)) },
                     modifier = Modifier
                         .size(40.dp)

@@ -20,9 +20,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/**
- * Modelo pré-formatado (sem lógica) que a Tela consome.
- */
 data class TripDetailHeaderUiModel(
     val id: Long,
     val title: String,
@@ -31,16 +28,10 @@ data class TripDetailHeaderUiModel(
     val formattedPeriod: String
 )
 
-/**
- * Estado provisório (Ações do Usuário).
- */
 private data class TripDetailTransientState(
     val wasDeleted: Boolean = false
 )
 
-/**
- * Estado da tela de detalhe de uma viagem.
- */
 data class TripDetailUiState(
     val tripHeader: TripDetailHeaderUiModel? = null,
     val spots: List<TouristSpotWithImages> = emptyList(),
@@ -68,10 +59,10 @@ class TripDetailViewModel(
 
     private val _transientState = MutableStateFlow(TripDetailTransientState())
 
-    // A Mágica: Decide automaticamente qual fluxo escutar baseado se é "LooseGroup" ou não.
+    // Alterna entre pontos sem viagem ou pontos da viagem específica
     private val _databaseFlow = if (isLooseGroup) {
         tripRepository.getSpotsWithoutTripStream().flatMapLatest { spots ->
-            flowOf(null to spots) // Retorna header nulo + lista de spots
+            flowOf(null to spots)
         }
     } else {
         tripRepository.getTripStream(tripId).flatMapLatest { tripWithSpots ->
@@ -84,7 +75,6 @@ class TripDetailViewModel(
         _transientState
     ) { (tripEntity, spotsList), transient ->
 
-        // Verifica se a viagem foi apagada no banco
         val isDeletedInDb = !isLooseGroup && tripEntity == null
 
         val headerUiModel = tripEntity?.let { trip ->
@@ -102,7 +92,7 @@ class TripDetailViewModel(
             spots = spotsList,
             isLoading = false,
             isLooseGroup = isLooseGroup,
-            wasDeleted = transient.wasDeleted || isDeletedInDb // Une deleção via botão com deleção via DB
+            wasDeleted = transient.wasDeleted || isDeletedInDb
         )
     }.stateIn(
         scope = viewModelScope,

@@ -234,7 +234,7 @@ fun SpotFormScreen(
                     text = "Salvar no Diário",
                     onClick = onSaveClick,
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = uiState.isValid // Bloqueia clique se inválido
+                    enabled = uiState.isValid
                 )
             }
 

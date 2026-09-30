@@ -12,52 +12,66 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.content.FileProvider
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.pictravelly.core.location.LocationHelper
+import com.app.pictravelly.core.utils.ImageStorageManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
-/**
- * ROTA: Responsável apenas por interligar a ViewModel, gerenciar launchers
- * de Activity/permissões e repassar dados e eventos para a UI (SpotFormScreen).
- */
 @Composable
 fun SpotFormRoute(
     viewModel: SpotFormViewModel,
     onNavigateBack: () -> Unit,
     onSpotSaved: (Long) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    initialSharedImages: List<String>? = null,
+    onConsumeSharedImages: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
-    var tempPhotoUri by remember { mutableStateOf<Uri?>(null) }
+    LaunchedEffect(initialSharedImages) {
+        if (!initialSharedImages.isNullOrEmpty()) {
+            viewModel.addImageUris(initialSharedImages)
+            onConsumeSharedImages()
+        }
+    }
+
+    var currentPhotoFile by remember { mutableStateOf<File?>(null) }
+    var currentPhotoUri by remember { mutableStateOf<Uri?>(null) }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
     ) { uris: List<Uri> ->
-        uris.forEach { uri -> viewModel.addImageUri(uri.toString()) }
+        coroutineScope.launch(Dispatchers.IO) {
+            val savedUris = uris.mapNotNull { uri ->
+                ImageStorageManager.copyUriToInternalStorage(context, uri)
+            }
+            withContext(Dispatchers.Main) {
+                savedUris.forEach { uri -> viewModel.addImageUri(uri.toString()) }
+            }
+        }
     }
 
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success: Boolean ->
-        if (success) tempPhotoUri?.let { uri -> viewModel.addImageUri(uri.toString()) }
+        if (success) {
+            currentPhotoUri?.let { uri -> viewModel.addImageUri(uri.toString()) }
+        } else {
+            currentPhotoFile?.delete()
+        }
     }
 
     fun launchCamera() {
         try {
-            val photoFile = File.createTempFile(
-                "spot_photo_${System.currentTimeMillis()}",
-                ".jpg",
-                context.cacheDir
-            )
-            val uri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.fileprovider",
-                photoFile
-            )
-            tempPhotoUri = uri
+            val (file, uri) = ImageStorageManager.createCameraImageFile(context)
+            currentPhotoFile = file
+            currentPhotoUri = uri
             cameraLauncher.launch(uri)
         } catch (e: Exception) {
             e.printStackTrace()

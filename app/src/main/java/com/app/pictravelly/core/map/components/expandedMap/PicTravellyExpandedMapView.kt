@@ -93,7 +93,6 @@ fun PicTravellyExpandedMapView(
             centerTrigger = centerTrigger
         )
 
-        // Componente Flutuante de Legenda (Canto Superior Esquerdo)
         MapLegendCard(
             markers = markers,
             onMarkerClick = onMarkerClick,
@@ -105,7 +104,6 @@ fun PicTravellyExpandedMapView(
                 .zIndex(20f)
         )
 
-        // Linha superior com os botões de Ação (Centralizar + Configurações + Fechar)
         Row(
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -175,7 +173,6 @@ fun PicTravellyExpandedMapView(
             }
         }
 
-        // Conteúdo central superior (MapHeaderChip + Banner de Aviso sem sobreposição)
         Column(
             modifier = Modifier
                 .align(Alignment.TopCenter)

@@ -15,9 +15,6 @@ import com.app.pictravelly.core.map.components.expandedMap.PicTravellySmartMapVi
 import com.app.pictravelly.core.map.model.MapMarkerData
 import com.app.pictravelly.feature.map.components.MapHeaderChip
 
-/**
- * TELA: 100% Visual. Não conhece a ViewModel, apenas estados e callbacks.
- */
 @Composable
 fun MapScreen(
     uiState: MapUiState,
@@ -38,13 +35,11 @@ fun MapScreen(
             onMapClick = onCloseSelection,
             showCloseButton = false,
             onFetchLocationRequested = onFetchLocationRequested,
-            // Injeção do Cabeçalho Superior centralizado
             topContent = {
                 MapHeaderChip(
                     spotsCount = uiState.spots.size
                 )
             },
-            // Injeção do Card Flutuante acima do Dock
             bottomContent = {
                 PicTravellySelectedSpotFloatingCard(
                     selectedSpot = uiState.selectedSpot,
