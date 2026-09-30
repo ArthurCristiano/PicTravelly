@@ -1,6 +1,7 @@
 package com.app.pictravelly.core.location
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
@@ -15,9 +16,9 @@ import kotlin.coroutines.resume
  */
 object LocationHelper {
 
-    // Coordenadas padrão de fallback quando o GPS ou permissão estiverem indisponíveis (Brasília).
-    const val DEFAULT_LATITUDE = -15.793889
-    const val DEFAULT_LONGITUDE = -47.882778
+    // Coordenadas padrão de fallback quando o GPS ou permissão estiverem indisponíveis.
+    const val DEFAULT_LATITUDE = -26.227568
+    const val DEFAULT_LONGITUDE = -52.671660
 
     fun hasLocationPermission(context: Context): Boolean {
         val finePermission = ContextCompat.checkSelfPermission(
@@ -33,6 +34,7 @@ object LocationHelper {
         return finePermission || coarsePermission
     }
 
+    @SuppressLint("MissingPermission")
     suspend fun getCurrentLocation(context: Context): Pair<Double, Double> {
         if (!hasLocationPermission(context)) {
             return Pair(DEFAULT_LATITUDE, DEFAULT_LONGITUDE)
@@ -71,7 +73,11 @@ object LocationHelper {
         }
     }
 
+    @SuppressLint("MissingPermission")
     private fun getNativeLastLocation(context: Context): Pair<Double, Double> {
+        if (!hasLocationPermission(context)) {
+            return Pair(DEFAULT_LATITUDE, DEFAULT_LONGITUDE)
+        }
         return try {
             val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
             val providers = try {
