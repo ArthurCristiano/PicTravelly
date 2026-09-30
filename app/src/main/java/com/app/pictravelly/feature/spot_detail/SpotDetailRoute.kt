@@ -1,12 +1,12 @@
 package com.app.pictravelly.feature.spot_detail
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 /**
  * ROTA: Gerencia ViewModels, Contexto, Estados Transitórios de Dialog e Navegação.
@@ -17,7 +17,7 @@ fun SpotDetailRoute(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showDeleteDialog by remember { mutableStateOf(false) }
     var isMapExpanded by remember { mutableStateOf(false) }
 
@@ -33,7 +33,7 @@ fun SpotDetailRoute(
         },
         onDeleteDismiss = { showDeleteDialog = false },
         onMapExpandedChange = { isMapExpanded = it },
-        onZoomChange = viewModel::updateZoom, // Presume que isso foi adicionado na ViewModel
+        onZoomChange = viewModel::updateZoom,
         onEngineChange = viewModel::updateMapEngine,
         onMapTypeChange = viewModel::updateGoogleMapType,
         modifier = modifier

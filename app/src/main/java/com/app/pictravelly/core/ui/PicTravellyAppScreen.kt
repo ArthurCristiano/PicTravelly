@@ -5,7 +5,9 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -33,23 +35,18 @@ import com.app.pictravelly.core.di.AppViewModelProvider
 import com.app.pictravelly.core.navigation.DestinationScreen
 import com.app.pictravelly.core.ui.components.AddEntrySheetContent
 import com.app.pictravelly.feature.home.HomeRoute
-import com.app.pictravelly.feature.home.HomeViewModel
 import com.app.pictravelly.feature.map.MapRoute
-import com.app.pictravelly.feature.map.MapViewModel
 import com.app.pictravelly.feature.settings.SettingsRoute
-import com.app.pictravelly.feature.settings.SettingsViewModel
 import com.app.pictravelly.feature.spot_detail.SpotDetailRoute
 import com.app.pictravelly.feature.spot_detail.SpotDetailViewModel
 import com.app.pictravelly.feature.spot_form.SpotFormRoute
 import com.app.pictravelly.feature.spot_form.SpotFormViewModel
 import com.app.pictravelly.feature.spots.SpotsRoute
-import com.app.pictravelly.feature.spots.SpotsViewModel
 import com.app.pictravelly.feature.trip_detail.TripDetailRoute
 import com.app.pictravelly.feature.trip_detail.TripDetailViewModel
 import com.app.pictravelly.feature.trip_form.TripFormRoute
 import com.app.pictravelly.feature.trip_form.TripFormViewModel
 import com.app.pictravelly.feature.trips.TripsRoute
-import com.app.pictravelly.feature.trips.TripsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,10 +85,7 @@ fun PicTravellyAppScreen() {
             ) {
                 // 1. Rota da Home (Dashboard)
                 composable(DestinationScreen.HOME.route) {
-                    val homeViewModel: HomeViewModel =
-                        viewModel(factory = AppViewModelProvider.Factory)
                     HomeRoute(
-                        viewModel = homeViewModel,
                         onNavigateToDetail = { spotId ->
                             navController.navigate(DestinationScreen.createSpotDetailRoute(spotId))
                         },
@@ -101,16 +95,13 @@ fun PicTravellyAppScreen() {
                         onNavigateToCreate = {
                             navController.navigate(DestinationScreen.createSpotFormRoute())
                         },
-                        contentPadding = paddingValues,
+                        contentPadding = paddingValues
                     )
                 }
 
                 // 2. Rota da aba Diário: lista de viagens registradas
                 composable(DestinationScreen.TRIPS.route) {
-                    val tripsViewModel: TripsViewModel =
-                        viewModel(factory = AppViewModelProvider.Factory)
-                    TripsRoute( // CORREÇÃO: Usando a Route
-                        viewModel = tripsViewModel,
+                    TripsRoute(
                         onNavigateToTripDetail = { tripId ->
                             navController.navigate(DestinationScreen.createTripDetailRoute(tripId))
                         },
@@ -123,23 +114,17 @@ fun PicTravellyAppScreen() {
 
                 // 3. Rota da aba Mapa: todos os pontos turísticos
                 composable(DestinationScreen.MAP.route) {
-                    val mapViewModel: MapViewModel =
-                        viewModel(factory = AppViewModelProvider.Factory)
                     MapRoute(
-                        viewModel = mapViewModel,
-                        contentPadding = paddingValues,
                         onNavigateToSpotDetail = { spotId ->
                             navController.navigate(DestinationScreen.createSpotDetailRoute(spotId))
                         },
+                        contentPadding = paddingValues
                     )
                 }
 
                 // 4. Rota de busca em todos os pontos
                 composable(DestinationScreen.SPOTS.route) {
-                    val spotsViewModel: SpotsViewModel =
-                        viewModel(factory = AppViewModelProvider.Factory)
-                    SpotsRoute( // CORREÇÃO: Usando a Route
-                        viewModel = spotsViewModel,
+                    SpotsRoute(
                         onNavigateToDetail = { spotId ->
                             navController.navigate(DestinationScreen.createSpotDetailRoute(spotId))
                         },
@@ -215,12 +200,7 @@ fun PicTravellyAppScreen() {
 
                 // 7. Rota de Ajustes / Preferências
                 composable(DestinationScreen.SETTINGS.route) {
-                    val settingsViewModel: SettingsViewModel =
-                        viewModel(factory = AppViewModelProvider.Factory)
-                    SettingsRoute(
-                        viewModel = settingsViewModel,
-                        contentPadding = paddingValues
-                    )
+                    SettingsRoute(contentPadding = paddingValues)
                 }
 
                 // 8. Rota de Detalhe da Viagem
@@ -308,16 +288,22 @@ fun PicTravellyAppScreen() {
         ModalBottomSheet(
             onDismissRequest = {
                 showAddSheet = false
-            }, // CORREÇÃO: Garante o fechamento ao tocar fora
-            sheetState = addSheetState
+            },
+            sheetState = addSheetState,
+            containerColor = MaterialTheme.colorScheme.surface,
+            dragHandle = {
+                BottomSheetDefaults.DragHandle(
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                )
+            }
         ) {
             AddEntrySheetContent(
                 onNewTrip = {
-                    showAddSheet = false // CORREÇÃO: Fecha a folha ao navegar
+                    showAddSheet = false
                     navController.navigate(DestinationScreen.createTripFormRoute())
                 },
                 onNewSpot = {
-                    showAddSheet = false // CORREÇÃO: Fecha a folha ao navegar
+                    showAddSheet = false
                     navController.navigate(DestinationScreen.createSpotFormRoute())
                 }
             )

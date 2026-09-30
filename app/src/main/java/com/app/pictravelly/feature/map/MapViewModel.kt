@@ -1,5 +1,6 @@
 package com.app.pictravelly.feature.map
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.pictravelly.core.data.TouristSpotRepository
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
  * Estado dinâmico provisório (Ações do usuário na tela).
@@ -97,6 +99,13 @@ class MapViewModel(
     fun updateCurrentLocation(lat: Double, lng: Double) {
         _transientState.update {
             it.copy(currentLatitude = lat, currentLongitude = lng, isLoadingLocation = false)
+        }
+    }
+
+    fun fetchCurrentLocation(context: Context) {
+        viewModelScope.launch {
+            val (lat, lng) = LocationHelper.getCurrentLocation(context.applicationContext)
+            updateCurrentLocation(lat, lng)
         }
     }
 

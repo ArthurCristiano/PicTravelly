@@ -1,7 +1,6 @@
 package com.app.pictravelly.feature.trip_form.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.Delete
@@ -33,18 +31,12 @@ import com.app.pictravelly.core.design.components.PicTravellyCard
 fun TripCoverPicker(
     coverImageUri: String?,
     onPickCover: () -> Unit,
-    onRemoveCover: () -> Unit
+    onRemoveCover: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     PicTravellyCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .border(
-                1.5.dp,
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
-                RoundedCornerShape(16.dp)
-            ),
-        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+        modifier = modifier.fillMaxWidth(),
+        containerColor = MaterialTheme.colorScheme.surface,
         onClick = onPickCover
     ) {
         if (coverImageUri != null) {
@@ -62,7 +54,7 @@ fun TripCoverPicker(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(8.dp)
-                        .size(30.dp)
+                        .size(36.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
                 ) {
@@ -70,7 +62,7 @@ fun TripCoverPicker(
                         Icons.Default.Delete,
                         contentDescription = "Remover capa",
                         tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
@@ -83,28 +75,28 @@ fun TripCoverPicker(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(64.dp)
+                        .size(56.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary),
+                        .background(MaterialTheme.colorScheme.primaryContainer),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Default.AddPhotoAlternate,
                         contentDescription = "Escolher capa",
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(32.dp)
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(28.dp)
                     )
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    "Escolher a Capa da Viagem",
-                    style = MaterialTheme.typography.titleSmall,
+                    text = "Escolher a Capa da Viagem",
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    "Opcional: sem capa, usamos a foto do primeiro ponto",
+                    text = "Opcional: sem capa, usamos a foto do primeiro ponto",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

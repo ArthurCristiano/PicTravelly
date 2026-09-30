@@ -1,26 +1,26 @@
 package com.app.pictravelly.feature.spot_form
 
-
 import android.Manifest
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
-import com.app.pictravelly.core.location.GeocodingHelper
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.pictravelly.core.location.LocationHelper
-import kotlinx.coroutines.launch
 import java.io.File
 
+/**
+ * ROTA: Responsável apenas por interligar a ViewModel, gerenciar launchers
+ * de Activity/permissões e repassar dados e eventos para a UI (SpotFormScreen).
+ */
 @Composable
 fun SpotFormRoute(
     viewModel: SpotFormViewModel,
@@ -28,9 +28,8 @@ fun SpotFormRoute(
     onSpotSaved: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
 
     var tempPhotoUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -65,48 +64,21 @@ fun SpotFormRoute(
         }
     }
 
-    suspend fun resolveAddress(lat: Double, lng: Double, overwrite: Boolean) {
-        if (!overwrite && uiState.locationName.isNotBlank()) return
-        viewModel.setResolvingAddress(true)
-        val address = GeocodingHelper.getAddressFromCoordinates(context, lat, lng)
-        viewModel.setResolvingAddress(false)
-
-        if (address != null) {
-            viewModel.updateLocationName(address)
-        } else if (overwrite) {
-            viewModel.setErrorMessage("Não foi possível obter o endereço. Você pode digitá-lo manualmente.")
-        }
-    }
-
-    suspend fun captureLocation(overwriteAddress: Boolean) {
-        viewModel.setLocatingDevice(true)
-        val (lat, lng) = LocationHelper.getCurrentLocation(context)
-        viewModel.setLocatingDevice(false)
-
-        val isFallback =
-            lat == LocationHelper.DEFAULT_LATITUDE && lng == LocationHelper.DEFAULT_LONGITUDE
-        viewModel.updateCoordinates(lat, lng, isFallback = isFallback)
-
-        if (isFallback) {
-            if (overwriteAddress) viewModel.setErrorMessage("Não foi possível obter a sua posição.")
-            return
-        }
-        resolveAddress(lat, lng, overwriteAddress)
-    }
-
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true || permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
-            coroutineScope.launch { captureLocation(false) }
+        if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        ) {
+            viewModel.captureLocation(context, overwriteAddress = false)
         } else {
-            viewModel.setErrorMessage("Sem permissão de localização. Toque no mapa para marcar o ponto.")
+            viewModel.onLocationPermissionDenied()
         }
     }
 
     LaunchedEffect(Unit) {
         if (LocationHelper.hasLocationPermission(context)) {
-            captureLocation(overwriteAddress = false)
+            viewModel.captureLocation(context, overwriteAddress = false)
         } else {
             locationPermissionLauncher.launch(
                 arrayOf(
@@ -124,13 +96,10 @@ fun SpotFormRoute(
         onDescriptionChange = viewModel::updateDescription,
         onLocationNameChange = viewModel::updateLocationName,
         onTripIdChange = viewModel::updateTripId,
-        onPickOnMap = { lat, lng ->
-            viewModel.updateCoordinates(lat, lng)
-            coroutineScope.launch { resolveAddress(lat, lng, true) }
-        },
+        onPickOnMap = { lat, lng -> viewModel.onPickOnMap(context, lat, lng) },
         onUseMyLocation = {
             if (LocationHelper.hasLocationPermission(context)) {
-                coroutineScope.launch { captureLocation(true) }
+                viewModel.captureLocation(context, overwriteAddress = true)
             } else {
                 locationPermissionLauncher.launch(
                     arrayOf(
@@ -140,15 +109,7 @@ fun SpotFormRoute(
                 )
             }
         },
-        onSearchAddress = {
-            coroutineScope.launch {
-                resolveAddress(
-                    uiState.latitude,
-                    uiState.longitude,
-                    true
-                )
-            }
-        },
+        onSearchAddress = { viewModel.resolveAddress(context, overwrite = true) },
         onAddPhotoCamera = ::launchCamera,
         onAddPhotoGallery = { photoPickerLauncher.launch("image/*") },
         onRemovePhoto = viewModel::removeImageUri,

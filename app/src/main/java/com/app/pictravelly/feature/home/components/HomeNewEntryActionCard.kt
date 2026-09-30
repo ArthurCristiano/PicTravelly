@@ -41,10 +41,9 @@ fun HomeNewEntryActionCard(
      * Personalize com tipografia cursiva, textura de pergaminho ou carimbo vintage de viagem.
      */
     PicTravellyCard(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onNavigateToCreate),
-        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+        modifier = modifier.fillMaxWidth(),
+        containerColor = MaterialTheme.colorScheme.surface,
+        onClick = onNavigateToCreate
     ) {
         Row(
             modifier = Modifier
@@ -59,19 +58,19 @@ fun HomeNewEntryActionCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(46.dp)
+                        .size(40.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary),
+                        .background(MaterialTheme.colorScheme.primaryContainer),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.AddLocationAlt,
                         contentDescription = "Registrar Parada",
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(24.dp)
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(22.dp)
                     )
                 }
-                Spacer(modifier = Modifier.width(14.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
                         text = "Registrar Nova Parada",
@@ -81,7 +80,7 @@ fun HomeNewEntryActionCard(
                     )
                     Text(
                         text = "Fotografe e anote suas memórias de hoje",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }

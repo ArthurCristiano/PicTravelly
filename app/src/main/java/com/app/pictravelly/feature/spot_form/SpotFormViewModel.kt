@@ -1,5 +1,6 @@
 package com.app.pictravelly.feature.spot_form
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.pictravelly.core.data.SettingsRepository
@@ -10,6 +11,7 @@ import com.app.pictravelly.core.database.model.settings.MapEngineType
 import com.app.pictravelly.core.database.model.touristSpot.SpotImageEntity
 import com.app.pictravelly.core.database.model.touristSpot.TouristSpotEntity
 import com.app.pictravelly.core.database.model.trip.TripEntity
+import com.app.pictravelly.core.location.GeocodingHelper
 import com.app.pictravelly.core.location.LocationHelper
 import com.app.pictravelly.core.navigation.DestinationScreen
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -89,8 +91,8 @@ class SpotFormViewModel(
             isUsingFallbackLocation = transient.isUsingFallbackLocation,
             isSaving = transient.isSaving,
             errorMessage = transient.errorMessage,
-            mapEngine = settings?.mapEngine ?: MapEngineType.OSM,
-            googleMapType = settings?.googleMapType ?: GoogleMapType.NORMAL
+            mapEngine = settings.mapEngine,
+            googleMapType = settings.googleMapType
         )
     }.stateIn(
         scope = viewModelScope,
@@ -128,6 +130,51 @@ class SpotFormViewModel(
 
     fun setErrorMessage(message: String?) =
         _transientState.update { it.copy(errorMessage = message) }
+
+    fun onPickOnMap(context: Context, lat: Double, lng: Double) {
+        updateCoordinates(lat, lng)
+        resolveAddress(context, overwrite = true)
+    }
+
+    fun resolveAddress(context: Context, overwrite: Boolean = true) {
+        val currentLat = _transientState.value.latitude
+        val currentLng = _transientState.value.longitude
+        if (!overwrite && _transientState.value.locationName.isNotBlank()) return
+
+        viewModelScope.launch {
+            setResolvingAddress(true)
+            val address = GeocodingHelper.getAddressFromCoordinates(context.applicationContext, currentLat, currentLng)
+            setResolvingAddress(false)
+
+            if (address != null) {
+                updateLocationName(address)
+            } else if (overwrite) {
+                setErrorMessage("Não foi possível obter o endereço. Você pode digitá-lo manualmente.")
+            }
+        }
+    }
+
+    fun captureLocation(context: Context, overwriteAddress: Boolean = false) {
+        viewModelScope.launch {
+            setLocatingDevice(true)
+            val (lat, lng) = LocationHelper.getCurrentLocation(context.applicationContext)
+            setLocatingDevice(false)
+
+            val isFallback =
+                lat == LocationHelper.DEFAULT_LATITUDE && lng == LocationHelper.DEFAULT_LONGITUDE
+            updateCoordinates(lat, lng, isFallback = isFallback)
+
+            if (isFallback) {
+                if (overwriteAddress) setErrorMessage("Não foi possível obter a sua posição.")
+                return@launch
+            }
+            resolveAddress(context, overwrite = overwriteAddress)
+        }
+    }
+
+    fun onLocationPermissionDenied() {
+        setErrorMessage("Sem permissão de localização. Toque no mapa para marcar o ponto.")
+    }
 
     fun addImageUri(uri: String) {
         if (!_transientState.value.imageUris.contains(uri)) {

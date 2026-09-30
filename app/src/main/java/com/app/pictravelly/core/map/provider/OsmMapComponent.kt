@@ -65,11 +65,8 @@ fun OsmMapComponent(
 
     val markerFolder = remember { FolderOverlay() }
 
-    // Mapeamento das camadas visuais (Tile Sources) para o OSM
-    val tileSource: ITileSource = when (googleMapType) {
-        GoogleMapType.NORMAL -> TileSourceFactory.MAPNIK
-        GoogleMapType.SATELLITE, GoogleMapType.HYBRID -> TileSourceFactory.USGS_SAT
-    }
+    // O OpenStreetMap opera com sua camada vetorial padrão mundial oficial (MAPNIK)
+    val tileSource: ITileSource = TileSourceFactory.MAPNIK
 
     val mapView = remember {
         MapView(context).apply {

@@ -85,7 +85,9 @@ fun HomeGamificationCard(
                     .height(8.dp)
                     .clip(RoundedCornerShape(4.dp)),
                 color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                trackColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+                drawStopIndicator = {},
+                gapSize = 0.dp
             )
         }
     }

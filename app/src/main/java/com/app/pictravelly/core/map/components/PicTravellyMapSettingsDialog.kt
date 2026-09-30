@@ -1,5 +1,6 @@
 package com.app.pictravelly.core.map.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -82,40 +83,54 @@ fun MapSettingsDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
+                AnimatedVisibility(visible = (currentEngine == MapEngineType.GOOGLE_MAPS)) {
+                    Column {
+                        Spacer(modifier = Modifier.height(4.dp))
 
-                // Seção 2: Tipo de Visualização
-                Text(
-                    text = "Estilo de Visualização",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
+                        // Seção 2: Tipo de Visualização (Google Maps)
+                        Text(
+                            text = "Estilo de Visualização",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
 
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    GoogleMapType.entries.forEach { type ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .selectable(
-                                    selected = (type == currentMapType),
-                                    onClick = { onMapTypeChanged(type) },
-                                    role = Role.RadioButton // <--- ADICIONADO PARA ACESSIBILIDADE
-                                )
-                                .padding(vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = (type == currentMapType),
-                                onClick = null // <--- O clique já é gerenciado pela Row
-                            )
-                            Text(
-                                text = type.label,
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.padding(start = 8.dp)
-                            )
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            GoogleMapType.entries.forEach { type ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .selectable(
+                                            selected = (type == currentMapType),
+                                            onClick = { onMapTypeChanged(type) },
+                                            role = Role.RadioButton
+                                        )
+                                        .padding(vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    RadioButton(
+                                        selected = (type == currentMapType),
+                                        onClick = null
+                                    )
+                                    Text(
+                                        text = type.label,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.padding(start = 8.dp)
+                                    )
+                                }
+                            }
                         }
                     }
+                }
+
+                AnimatedVisibility(visible = (currentEngine == MapEngineType.OSM)) {
+                    Text(
+                        text = "ℹ️ O OpenStreetMap opera exclusivamente com a camada vetorial padrão (Mapnik). Para visão de Satélite e Híbrida, selecione Google Maps.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         },

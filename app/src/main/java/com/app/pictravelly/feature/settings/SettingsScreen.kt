@@ -1,6 +1,7 @@
 package com.app.pictravelly.feature.settings
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -79,18 +80,20 @@ fun SettingsScreen(
             }
         }
 
-        // Seção: Tipos de Mapa
-        SettingsSection(title = "Tipo de mapa", icon = Icons.Default.Preview) {
-            GoogleMapType.entries.forEach { type ->
-                val visualLabel = when (type) {
-                    GoogleMapType.NORMAL -> "Padrão"
-                    GoogleMapType.SATELLITE -> "Satélite"
-                    GoogleMapType.HYBRID -> "Híbrido"
+        // Seção: Tipos de Mapa (disponível apenas para Google Maps)
+        AnimatedVisibility(visible = uiState.selectedMapEngine == MapEngineType.GOOGLE_MAPS) {
+            SettingsSection(title = "Tipo de mapa (Google Maps)", icon = Icons.Default.Preview) {
+                GoogleMapType.entries.forEach { type ->
+                    val visualLabel = when (type) {
+                        GoogleMapType.NORMAL -> "Padrão"
+                        GoogleMapType.SATELLITE -> "Satélite"
+                        GoogleMapType.HYBRID -> "Híbrido"
+                    }
+                    SettingsRadioRow(
+                        label = visualLabel,
+                        isSelected = uiState.selectedGoogleMapType == type,
+                        onClick = { onMapTypeChange(type) })
                 }
-                SettingsRadioRow(
-                    label = visualLabel,
-                    isSelected = uiState.selectedGoogleMapType == type,
-                    onClick = { onMapTypeChange(type) })
             }
         }
 
