@@ -2,40 +2,45 @@ package com.app.pictravelly.core.design.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Cores Neutras e de Fundo (Papel do Diário)
-val BackgroundLight = Color(0xFFFAFAFA) // Off-white confortável
-val SurfaceLight = Color(0xFFF3F4F6)    // Cinza levíssimo para cards
-val TextPrimaryLight = Color(0xFF1A1C1E) // Quase preto, alta legibilidade
-val TextSecondaryLight = Color(0xFF73777F) // Cinza para descrições de fotos
+val BackgroundLight = Color(0xFFFBF8F1)
+val SurfaceLight = Color(0xFFE7E1D2)
+val TextPrimaryLight = Color(0xFF3A3A3A)
+val TextSecondaryLight = Color(0xFF9A8F7B)
+val OutlineLight = Color(0xFFB6AF9E)
+val OutlineVariantLight = Color(0xFFD9D2C0)
 
-// Cores da Marca (Oceano e Terra)
-val PrimaryBlue = Color(0xFF006493) // Azul de confiança/mapa
-val OnPrimaryBlue = Color(0xFFFFFFFF) // Texto branco sobre azul
-val PrimaryContainerBlue = Color(0xFFCAE6FF) // Azul claro para destaque de áreas
-val OnPrimaryContainerBlue = Color(0xFF001E30)
+val PrimaryBrown = Color(0xFF7A6F5B)
+val OnPrimaryBrown = Color(0xFFFBF8F1)
+val PrimaryContainerBrown = Color(0xFFE7E1D2)
+val OnPrimaryContainerBrown = Color(0xFF3A3A3A)
 
-val SecondaryTerracotta = Color(0xFF904D00) // Laranja/terracota amigável
+val SecondaryTerracotta = Color(0xFFC97B84)
 val OnSecondaryTerracotta = Color(0xFFFFFFFF)
-val SecondaryContainerTerracotta = Color(0xFFFFDCC2)
-val OnSecondaryContainerTerracotta = Color(0xFF2E1500)
+val SecondaryContainerTerracotta = Color(0xFFF3D9DC)
+val OnSecondaryContainerTerracotta = Color(0xFF4A1F22)
 
-val ErrorRed = Color(0xFFBA1A1A) // Obrigatório no MD3 para validações (ex: sem GPS)
+val ErrorRed = Color(0xFFBA1A1A)
+val ErrorContainerLight = Color(0xFFFFDAD6)
+val OnErrorContainerLight = Color(0xFF410002)
 
-// Cores Neutras e de Fundo (Modo Escuro)
-val BackgroundDark = Color(0xFF111416) // Cinza/Azul escuro profundo
-val SurfaceDark = Color(0xFF1A1C1E)    // Ligeiramente mais claro para destacar cards
-val TextPrimaryDark = Color(0xFFE2E2E5) // Quase branco, mas não agressivo
-val TextSecondaryDark = Color(0xFFC4C6D0) // Cinza médio para textos secundários
+val BackgroundDark = Color(0xFF201C16)
+val SurfaceDark = Color(0xFF2A241C)
+val TextPrimaryDark = Color(0xFFEDE7DA)
+val TextSecondaryDark = Color(0xFFBBAF9C)
 
-// Cores da Marca (Oceano e Terra - Versão Escura e Desaturada)
-val PrimaryBlueDark = Color(0xFF8DCDFF) // Azul claro para saltar aos olhos no fundo escuro
-val OnPrimaryBlueDark = Color(0xFF00344F) // Texto escuro sobre o botão claro
-val PrimaryContainerBlueDark = Color(0xFF004B70)
-val OnPrimaryContainerBlueDark = Color(0xFFCAE6FF)
+val OutlineDark = Color(0xFF8A7F6A)
+val OutlineVariantDark = Color(0xFF4A4032)
 
-val SecondaryTerracottaDark = Color(0xFFFFB782) // Laranja desaturado/suave
-val OnSecondaryTerracottaDark = Color(0xFF4D2600)
-val SecondaryContainerTerracottaDark = Color(0xFF6D3900)
-val OnSecondaryContainerTerracottaDark = Color(0xFFFFDCC2)
+val PrimaryBrownDark = Color(0xFFD8C9A8)
+val OnPrimaryBrownDark = Color(0xFF3A2E1C)
+val PrimaryContainerBrownDark = Color(0xFF4A3B24)
+val OnPrimaryContainerBrownDark = Color(0xFFEAD9B8)
+
+val SecondaryTerracottaDark = Color(0xFFE3A5A8)
+val OnSecondaryTerracottaDark = Color(0xFF4A1F22)
+val SecondaryContainerTerracottaDark = Color(0xFF6B2F33)
+val OnSecondaryContainerTerracottaDark = Color(0xFFF3D9DC)
 
 val ErrorRedDark = Color(0xFFFFB4AB)
+val ErrorContainerDark = Color(0xFF93000A)
+val OnErrorContainerDark = Color(0xFFFFDAD6)
