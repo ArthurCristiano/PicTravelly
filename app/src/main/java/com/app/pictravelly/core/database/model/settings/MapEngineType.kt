@@ -1,9 +1,9 @@
-package com.app.pictravelly.core.map
+package com.app.pictravelly.core.database.model.settings
 
 /**
  * Motores de mapa suportados pela aplicação de forma modular.
  */
 enum class MapEngineType(val label: String) {
     OSM("OpenStreetMap (Livre e Gratuito)"),
-    GOOGLE_MAPS("Google Maps")
+    GOOGLE_MAPS("Google Maps");
 }

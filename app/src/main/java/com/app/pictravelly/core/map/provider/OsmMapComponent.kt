@@ -1,58 +1,139 @@
 package com.app.pictravelly.core.map.provider
 
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.app.pictravelly.core.map.MapMarkerData
+import com.app.pictravelly.core.database.model.settings.GoogleMapType
+import com.app.pictravelly.core.map.model.MapMarkerData
+import com.app.pictravelly.core.map.model.MarkerType
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
+import org.osmdroid.events.MapListener
+import org.osmdroid.events.ScrollEvent
+import org.osmdroid.events.ZoomEvent
+import org.osmdroid.tileprovider.tilesource.ITileSource
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.FolderOverlay
 import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
+import kotlin.math.abs
 
-/**
- * Componente de mapa baseado no OpenStreetMap (osmdroid).
- * 100% livre, gratuito, sem exigência de chave de API e nativamente offline-friendly.
- */
 @Composable
 fun OsmMapComponent(
     latitude: Double,
     longitude: Double,
-    zoom: Double,
+    zoom: Float,
     markers: List<MapMarkerData>,
     onMarkerClick: (MapMarkerData) -> Unit,
     modifier: Modifier = Modifier,
     isInteractive: Boolean = true,
     onMapClick: (() -> Unit)? = null,
-    onLocationPick: ((Double, Double) -> Unit)? = null
+    onLocationPick: ((Double, Double) -> Unit)? = null,
+    onZoomChange: ((Float) -> Unit)? = null,
+    googleMapType: GoogleMapType = GoogleMapType.NORMAL,
+    centerTrigger: Int = 0
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Configuração obrigatória do User-Agent da aplicação para os servidores OpenStreetMap
+    val currentOnMapClick by rememberUpdatedState(onMapClick)
+    val currentOnLocationPick by rememberUpdatedState(onLocationPick)
+    val currentOnMarkerClick by rememberUpdatedState(onMarkerClick)
+    val currentOnZoomChange by rememberUpdatedState(onZoomChange)
+
+    val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
+    val secondaryColor = MaterialTheme.colorScheme.secondary.toArgb()
+
     remember {
         Configuration.getInstance().userAgentValue = context.packageName
         true
     }
 
+    val markerFolder = remember { FolderOverlay() }
+
+    // Mapeamento das camadas visuais (Tile Sources) para o OSM
+    val tileSource: ITileSource = when (googleMapType) {
+        GoogleMapType.NORMAL -> TileSourceFactory.MAPNIK
+        GoogleMapType.SATELLITE, GoogleMapType.HYBRID -> TileSourceFactory.USGS_SAT
+    }
+
     val mapView = remember {
         MapView(context).apply {
-            setTileSource(TileSourceFactory.MAPNIK)
-            setMultiTouchControls(isInteractive)
-            controller.setZoom(zoom)
+            setTileSource(tileSource)
+            setBuiltInZoomControls(false)
+            setMultiTouchControls(true)
+
+            controller.setZoom(zoom.toDouble())
             controller.setCenter(GeoPoint(latitude, longitude))
+
+            val eventsReceiver = object : MapEventsReceiver {
+                override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
+                    currentOnMapClick?.invoke()
+                    if (p != null) currentOnLocationPick?.invoke(p.latitude, p.longitude)
+                    return true
+                }
+
+                override fun longPressHelper(p: GeoPoint?): Boolean = false
+            }
+            overlays.add(MapEventsOverlay(eventsReceiver))
+            overlays.add(markerFolder)
+
+            addMapListener(object : MapListener {
+                override fun onScroll(event: ScrollEvent?): Boolean = false
+                override fun onZoom(event: ZoomEvent?): Boolean {
+                    event?.let {
+                        currentOnZoomChange?.invoke(it.zoomLevel.toFloat())
+                    }
+                    return true
+                }
+            })
         }
     }
 
-    // Tratamento correto do ciclo de vida do MapView
+    LaunchedEffect(latitude, longitude) {
+        val currentCenter = mapView.mapCenter
+        val latDiff = abs(currentCenter.latitude - latitude)
+        val lonDiff = abs(currentCenter.longitude - longitude)
+
+        if (latDiff > 0.0001 || lonDiff > 0.0001) {
+            mapView.controller.animateTo(GeoPoint(latitude, longitude))
+        }
+    }
+
+    LaunchedEffect(zoom) {
+        if (abs(mapView.zoomLevelDouble - zoom.toDouble()) > 0.01) {
+            mapView.controller.setZoom(zoom.toDouble())
+        }
+    }
+
+    // ÚNICO GATILHO DE MOVIMENTO:
+    // Dispara a animação sempre que mudar lat/long externamente OU o gatilho do botão for acionado
+    LaunchedEffect(latitude, longitude, centerTrigger) {
+        val currentCenter = mapView.mapCenter
+        val latDiff = abs(currentCenter.latitude - latitude)
+        val lonDiff = abs(currentCenter.longitude - longitude)
+
+        // Evita chamadas de animação desnecessárias se o mapa já estiver no lugar certo
+        // (mas força a ida se o trigger de centralizar tiver sido acionado)
+        if (latDiff > 0.0001 || lonDiff > 0.0001 || centerTrigger > 0) {
+            mapView.controller.animateTo(GeoPoint(latitude, longitude))
+        }
+    }
+
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
@@ -72,40 +153,52 @@ fun OsmMapComponent(
         factory = { mapView },
         modifier = modifier,
         update = { map ->
-            map.setMultiTouchControls(isInteractive)
-            map.controller.setCenter(GeoPoint(latitude, longitude))
-
-            // Limpa overlays anteriores para sincronizar marcadores
-            map.overlays.clear()
-
-            // Listener de toque no mapa: expande o card e/ou escolhe a coordenada
-            if (onMapClick != null || onLocationPick != null) {
-                val eventsReceiver = object : MapEventsReceiver {
-                    override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
-                        onMapClick?.invoke()
-                        if (p != null) onLocationPick?.invoke(p.latitude, p.longitude)
-                        return true
-                    }
-                    override fun longPressHelper(p: GeoPoint?): Boolean = false
-                }
-                map.overlays.add(MapEventsOverlay(eventsReceiver))
+            // Atualiza a fonte do tile se o usuário mudou a configuração nas preferências
+            if (map.tileProvider.tileSource.name() != tileSource.name()) {
+                map.setTileSource(tileSource)
             }
 
-            // Renderiza os marcadores dos locais cadastrados
+            map.setMultiTouchControls(isInteractive)
+
+            markerFolder.items.clear()
             markers.forEach { markerData ->
                 val marker = Marker(map).apply {
                     position = GeoPoint(markerData.latitude, markerData.longitude)
                     title = markerData.title
                     snippet = markerData.snippet
                     setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+
+                    // Customização Visual do OSM (Usando o ícone base do OSM e alterando a cor)
+                    when (markerData.type) {
+                        MarkerType.USER_LOCATION -> {
+                            // Pinta o ícone padrão do OSM de AZUL (ou carregue o getOsmTintedMarker criado no passo 2)
+                            val defaultIcon = ContextCompat.getDrawable(
+                                context,
+                                org.osmdroid.library.R.drawable.marker_default
+                            )?.mutate()
+                            defaultIcon?.setTint(primaryColor) // Cor do usuário
+                            icon = defaultIcon
+                        }
+
+                        MarkerType.TOURIST_SPOT -> {
+                            val defaultIcon = ContextCompat.getDrawable(
+                                context,
+                                org.osmdroid.library.R.drawable.marker_default
+                            )?.mutate()
+                            defaultIcon?.setTint(secondaryColor) // Cor dos spots
+                            icon = defaultIcon
+                        }
+                    }
+
                     setOnMarkerClickListener { _, _ ->
-                        onMarkerClick(markerData)
+                        if (markerData.type == MarkerType.TOURIST_SPOT) {
+                            currentOnMarkerClick(markerData)
+                        }
                         true
                     }
                 }
-                map.overlays.add(marker)
+                markerFolder.add(marker)
             }
-
             map.invalidate()
         }
     )

@@ -1,4 +1,4 @@
-package com.app.pictravelly.core.database.model
+package com.app.pictravelly.core.database.model.touristSpot
 
 import androidx.room.Embedded
 import androidx.room.Relation

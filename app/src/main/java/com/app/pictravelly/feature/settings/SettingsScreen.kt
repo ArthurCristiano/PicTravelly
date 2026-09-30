@@ -1,45 +1,43 @@
 package com.app.pictravelly.feature.settings
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.Preview
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.app.pictravelly.core.design.components.PicTravellyCard
+import com.app.pictravelly.core.database.model.settings.GoogleMapType
+import com.app.pictravelly.core.database.model.settings.AppTheme
 import com.app.pictravelly.core.design.components.PicTravellyTitle
+import com.app.pictravelly.core.database.model.settings.MapEngineType
+import com.app.pictravelly.core.design.theme.PicTravellyTheme
+import com.app.pictravelly.feature.settings.components.SettingsAboutCard
+import com.app.pictravelly.feature.settings.components.SettingsRadioRow
+import com.app.pictravelly.feature.settings.components.SettingsSection
 
 @Composable
 fun SettingsScreen(
-    viewModel: SettingsViewModel,
-    modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(0.dp)
+    uiState: SettingsUiState, // Recebe apenas os dados prontos
+    contentPadding: PaddingValues,
+    onThemeChange: (AppTheme) -> Unit,
+    onMapEngineChange: (MapEngineType) -> Unit,
+    onMapTypeChange: (GoogleMapType) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-
     // ============================================================================
     // 🎨 [DESIGN / HUMBERTO] - TELA DE PREFERÊNCIAS E MENU:
     // - Humberto: você pode aplicar agrupamentos visuais elegantes, divisores de couro
@@ -58,135 +56,74 @@ fun SettingsScreen(
 
         // Seção: Aparência e Tema
         SettingsSection(title = "Aparência", icon = Icons.Default.Palette) {
-            AppThemeSetting.entries.forEach { theme ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { viewModel.setTheme(theme) }
-                        .padding(vertical = 8.dp, horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = uiState.selectedTheme == theme,
-                        onClick = { viewModel.setTheme(theme) }
-                    )
-                    Text(
-                        text = theme.label,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
+            AppTheme.entries.forEach { theme ->
+                val themeLabel = when (theme) {
+                    AppTheme.SYSTEM -> "Padrão do Sistema"
+                    AppTheme.LIGHT -> "Modo Claro"
+                    AppTheme.DARK -> "Modo Escuro"
                 }
+                SettingsRadioRow(
+                    label = themeLabel,
+                    isSelected = uiState.selectedTheme == theme,
+                    onClick = { onThemeChange(theme) })
             }
         }
 
         // Seção: Motor e Provedor de Mapa
         SettingsSection(title = "Provedor de Mapa", icon = Icons.Default.Map) {
-            com.app.pictravelly.core.map.MapEngineType.entries.forEach { engine ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { viewModel.setMapEngine(engine) }
-                        .padding(vertical = 8.dp, horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = uiState.selectedMapEngine == engine,
-                        onClick = { viewModel.setMapEngine(engine) }
-                    )
-                    Text(
-                        text = engine.label,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                }
+            MapEngineType.entries.forEach { engine ->
+                SettingsRadioRow(
+                    label = engine.label,
+                    isSelected = uiState.selectedMapEngine == engine,
+                    onClick = { onMapEngineChange(engine) })
             }
         }
 
-        // Seção: Idioma
-        SettingsSection(title = "Idioma da Interface", icon = Icons.Default.Language) {
-            val languages = listOf("Português (Brasil)", "English (US)", "Español")
-            languages.forEach { lang ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { viewModel.setLanguage(lang) }
-                        .padding(vertical = 8.dp, horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = uiState.selectedLanguage == lang,
-                        onClick = { viewModel.setLanguage(lang) }
-                    )
-                    Text(
-                        text = lang,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
+        // Seção: Tipos de Mapa
+        SettingsSection(title = "Tipo de mapa", icon = Icons.Default.Preview) {
+            GoogleMapType.entries.forEach { type ->
+                val visualLabel = when (type) {
+                    GoogleMapType.NORMAL -> "Padrão"
+                    GoogleMapType.SATELLITE -> "Satélite"
+                    GoogleMapType.HYBRID -> "Híbrido"
                 }
+                SettingsRadioRow(
+                    label = visualLabel,
+                    isSelected = uiState.selectedGoogleMapType == type,
+                    onClick = { onMapTypeChange(type) })
             }
         }
 
         // Seção: Sobre
-        PicTravellyCard(
-            modifier = Modifier.fillMaxWidth(),
-            containerColor = MaterialTheme.colorScheme.surface
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = "PicTravelly",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "Versão 1.0 (Build 2026)",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "Seu diário de viagens interativo e offline.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
+        SettingsAboutCard(
+            appVersion = "1.0 (Build 2026)" // Pode ser trocado por BuildConfig.VERSION_NAME depois
+        )
 
         Spacer(modifier = Modifier.height(72.dp))
     }
 }
 
+@Preview(name = "Settings - Light Mode", showBackground = true)
+@Preview(
+    name = "Settings - Dark Mode",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
 @Composable
-private fun SettingsSection(
-    title: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    content: @Composable () -> Unit
-) {
-    PicTravellyCard(
-        modifier = Modifier.fillMaxWidth(),
-        containerColor = MaterialTheme.colorScheme.surface
-    ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            content()
-        }
+private fun SettingsScreenPreview() {
+    // 1. Envolve o Preview com o Design System do seu app
+    PicTravellyTheme { // Substitua por PicTravellyTheme { se existir
+        SettingsScreen(
+            uiState = SettingsUiState(
+                selectedTheme = AppTheme.SYSTEM,
+                selectedGoogleMapType = GoogleMapType.NORMAL,
+                // Assumindo que a Engine padrão seja instanciável diretamente
+                selectedMapEngine = MapEngineType.entries.first()
+            ),
+            contentPadding = PaddingValues(0.dp),
+            onThemeChange = {},
+            onMapEngineChange = {},
+            onMapTypeChange = {}
+        )
     }
 }

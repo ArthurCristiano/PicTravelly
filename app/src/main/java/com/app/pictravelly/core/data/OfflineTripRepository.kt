@@ -1,9 +1,9 @@
 package com.app.pictravelly.core.data
 
 import com.app.pictravelly.core.database.dao.TripDao
-import com.app.pictravelly.core.database.model.TouristSpotWithImages
-import com.app.pictravelly.core.database.model.TripEntity
-import com.app.pictravelly.core.database.model.TripWithSpots
+import com.app.pictravelly.core.database.model.touristSpot.TouristSpotWithImages
+import com.app.pictravelly.core.database.model.trip.TripEntity
+import com.app.pictravelly.core.database.model.trip.TripWithSpots
 import kotlinx.coroutines.flow.Flow
 
 /**

@@ -3,17 +3,29 @@ package com.app.pictravelly.feature.map
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.pictravelly.core.data.TouristSpotRepository
-import com.app.pictravelly.core.database.model.TouristSpotWithImages
+import com.app.pictravelly.core.database.model.touristSpot.TouristSpotWithImages
 import com.app.pictravelly.core.location.LocationHelper
-import com.app.pictravelly.core.map.MapMarkerData
+import com.app.pictravelly.core.map.model.MapMarkerData
+import com.app.pictravelly.core.map.model.MarkerType
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 
 /**
- * Estado da aba Mapa, que reúne todos os pontos turísticos cadastrados.
+ * Estado dinâmico provisório (Ações do usuário na tela).
+ */
+private data class MapTransientState(
+    val selectedSpot: TouristSpotWithImages? = null,
+    val currentLatitude: Double = LocationHelper.DEFAULT_LATITUDE,
+    val currentLongitude: Double = LocationHelper.DEFAULT_LONGITUDE,
+    val isLoadingLocation: Boolean = true,
+)
+
+/**
+ * Estado consolidado da aba Mapa.
  */
 data class MapUiState(
     val spots: List<TouristSpotWithImages> = emptyList(),
@@ -23,55 +35,77 @@ data class MapUiState(
     val isLoading: Boolean = true
 ) {
     val markers: List<MapMarkerData>
-        get() = spots.map { spotWithImages ->
-            MapMarkerData(
-                id = spotWithImages.spot.id,
-                title = spotWithImages.spot.title,
-                snippet = spotWithImages.spot.locationName,
-                latitude = spotWithImages.spot.latitude,
-                longitude = spotWithImages.spot.longitude
+        get() {
+            // 1. Mapeia os pontos turísticos normais
+            val spotMarkers = spots.map { spotWithImages ->
+                MapMarkerData(
+                    id = spotWithImages.spot.id,
+                    title = spotWithImages.spot.title,
+                    snippet = spotWithImages.spot.locationName,
+                    latitude = spotWithImages.spot.latitude,
+                    longitude = spotWithImages.spot.longitude,
+                    type = MarkerType.TOURIST_SPOT // Pino normal
+                )
+            }
+
+            // 2. Cria o pino do Usuário (ID negativo para não conflitar com o banco de dados)
+            val userMarker = MapMarkerData(
+                id = -1L,
+                title = "Você está aqui",
+                snippet = "Sua localização atual",
+                latitude = currentLatitude,
+                longitude = currentLongitude,
+                type = MarkerType.USER_LOCATION // Pino estilizado!
             )
+
+            return spotMarkers + userMarker
         }
 
-    /**
-     * O mapa abre no ponto selecionado, no cadastro mais recente ou, sem nada
-     * cadastrado, na posição atual do aparelho.
-     */
     val focusLatitude: Double
-        get() = selectedSpot?.spot?.latitude ?: spots.firstOrNull()?.spot?.latitude ?: currentLatitude
+        get() = selectedSpot?.spot?.latitude ?: currentLatitude
 
     val focusLongitude: Double
-        get() = selectedSpot?.spot?.longitude ?: spots.firstOrNull()?.spot?.longitude ?: currentLongitude
+        get() = selectedSpot?.spot?.longitude ?: currentLongitude
 }
 
 /**
- * ViewModel da aba Mapa: observa os pontos e guarda o marcador selecionado.
+ * ViewModel reativa da aba Mapa.
  */
 class MapViewModel(
-    private val repository: TouristSpotRepository
+    touristSpotRepository: TouristSpotRepository,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(MapUiState())
-    val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
+    private val _transientState = MutableStateFlow(MapTransientState())
 
-    init {
-        viewModelScope.launch {
-            repository.getAllSpotsStream().collect { spotsList ->
-                _uiState.update { it.copy(spots = spotsList, isLoading = false) }
-            }
+    val uiState: StateFlow<MapUiState> = combine(
+        touristSpotRepository.getAllSpotsStream(),
+        _transientState
+    ) { spotsList, transient ->
+        MapUiState(
+            spots = spotsList,
+            selectedSpot = transient.selectedSpot,
+            currentLatitude = transient.currentLatitude,
+            currentLongitude = transient.currentLongitude,
+            isLoading = false
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = MapUiState()
+    )
+
+    fun updateCurrentLocation(lat: Double, lng: Double) {
+        _transientState.update {
+            it.copy(currentLatitude = lat, currentLongitude = lng, isLoadingLocation = false)
         }
     }
 
-    fun updateCurrentLocation(lat: Double, lng: Double) {
-        _uiState.update { it.copy(currentLatitude = lat, currentLongitude = lng) }
-    }
-
     fun selectSpotById(spotId: Long) {
-        val spot = _uiState.value.spots.firstOrNull { it.spot.id == spotId }
-        _uiState.update { it.copy(selectedSpot = spot) }
+        val spot = uiState.value.spots.firstOrNull { it.spot.id == spotId }
+        _transientState.update { it.copy(selectedSpot = spot) }
     }
 
     fun clearSelection() {
-        _uiState.update { it.copy(selectedSpot = null) }
+        _transientState.update { it.copy(selectedSpot = null) }
     }
 }

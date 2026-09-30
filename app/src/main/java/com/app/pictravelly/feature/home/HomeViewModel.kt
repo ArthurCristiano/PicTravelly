@@ -3,17 +3,25 @@ package com.app.pictravelly.feature.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.pictravelly.core.data.TouristSpotRepository
-import com.app.pictravelly.core.database.model.TouristSpotWithImages
+import com.app.pictravelly.core.database.model.touristSpot.TouristSpotWithImages
 import com.app.pictravelly.core.location.LocationHelper
+import com.app.pictravelly.core.map.model.MapMarkerData
+import com.app.pictravelly.core.map.model.MarkerType
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 
-/**
- * Estado da UI da Tela Inicial (Home).
- */
+private data class HomeTransientState(
+    val isMapExpanded: Boolean = false,
+    val selectedSpot: TouristSpotWithImages? = null,
+    val currentLatitude: Double = LocationHelper.DEFAULT_LATITUDE,
+    val currentLongitude: Double = LocationHelper.DEFAULT_LONGITUDE,
+    val isLoadingLocation: Boolean = true
+)
+
 data class HomeUiState(
     val spots: List<TouristSpotWithImages> = emptyList(),
     val isMapExpanded: Boolean = false,
@@ -22,9 +30,32 @@ data class HomeUiState(
     val currentLongitude: Double = LocationHelper.DEFAULT_LONGITUDE,
     val isLoadingLocation: Boolean = true
 ) {
+    // Geração reativa dos marcadores (Pontos + Usuário)
+    val markers: List<MapMarkerData>
+        get() {
+            val spotMarkers = spots.map { spotWithImages ->
+                MapMarkerData(
+                    id = spotWithImages.spot.id,
+                    title = spotWithImages.spot.title,
+                    snippet = spotWithImages.spot.locationName,
+                    latitude = spotWithImages.spot.latitude,
+                    longitude = spotWithImages.spot.longitude,
+                    type = MarkerType.TOURIST_SPOT
+                )
+            }
+            val userMarker = MapMarkerData(
+                id = -1L,
+                title = "Você está aqui",
+                snippet = "Sua localização atual",
+                latitude = currentLatitude,
+                longitude = currentLongitude,
+                type = MarkerType.USER_LOCATION
+            )
+            return spotMarkers + userMarker
+        }
+
     val totalSpotsCount: Int get() = spots.size
 
-    // Nível e XP calculados com base na quantidade de locais explorados (Gamificação)
     val travelerLevel: String
         get() = when (totalSpotsCount) {
             0 -> "Novato do Diário"
@@ -44,46 +75,45 @@ data class HomeUiState(
             }
             return (totalSpotsCount.toFloat() / targetForNextLevel).coerceIn(0f, 1f)
         }
+
 }
 
-/**
- * ViewModel responsável pela lógica de negócios da Home e do Mapa Interativo.
- */
 class HomeViewModel(
-    private val repository: TouristSpotRepository
+    touristSpotRepository: TouristSpotRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(HomeUiState())
-    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    private val _transientState = MutableStateFlow(HomeTransientState())
 
-    init {
-        // Observa em tempo real os locais cadastrados no banco
-        viewModelScope.launch {
-            repository.getAllSpotsStream().collect { spotsList ->
-                _uiState.update { it.copy(spots = spotsList) }
-            }
-        }
-    }
+    // Combina apenas o Banco de Dados (Room) com as ações da tela
+    val uiState: StateFlow<HomeUiState> = combine(
+        touristSpotRepository.getAllSpotsStream(),
+        _transientState
+    ) { spotsList, transient ->
+        HomeUiState(
+            spots = spotsList,
+            isMapExpanded = transient.isMapExpanded,
+            selectedSpot = transient.selectedSpot,
+            currentLatitude = transient.currentLatitude,
+            currentLongitude = transient.currentLongitude,
+            isLoadingLocation = transient.isLoadingLocation
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = HomeUiState()
+    )
 
     fun updateCurrentLocation(lat: Double, lng: Double) {
-        _uiState.update {
-            it.copy(
-                currentLatitude = lat,
-                currentLongitude = lng,
-                isLoadingLocation = false
-            )
+        _transientState.update {
+            it.copy(currentLatitude = lat, currentLongitude = lng, isLoadingLocation = false)
         }
-    }
-
-    fun toggleMapExpansion() {
-        _uiState.update { it.copy(isMapExpanded = !it.isMapExpanded) }
     }
 
     fun setMapExpanded(expanded: Boolean) {
-        _uiState.update { it.copy(isMapExpanded = expanded) }
+        _transientState.update { it.copy(isMapExpanded = expanded) }
     }
 
     fun selectSpot(spot: TouristSpotWithImages?) {
-        _uiState.update { it.copy(selectedSpot = spot) }
+        _transientState.update { it.copy(selectedSpot = spot) }
     }
 }

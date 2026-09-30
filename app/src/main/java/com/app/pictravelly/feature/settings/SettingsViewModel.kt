@@ -1,41 +1,50 @@
 package com.app.pictravelly.feature.settings
 
 import androidx.lifecycle.ViewModel
-import com.app.pictravelly.core.design.theme.ThemeController
-import com.app.pictravelly.core.map.MapConfig
-import com.app.pictravelly.core.map.MapEngineType
-import kotlinx.coroutines.flow.MutableStateFlow
+import androidx.lifecycle.viewModelScope
+import com.app.pictravelly.core.data.SettingsRepository
+import com.app.pictravelly.core.database.model.settings.AppTheme
+import com.app.pictravelly.core.database.model.settings.GoogleMapType
+import com.app.pictravelly.core.database.model.settings.MapEngineType
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-
-enum class AppThemeSetting(val label: String) {
-    SYSTEM("Padrão do Sistema"),
-    LIGHT("Modo Claro"),
-    DARK("Modo Escuro")
-}
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 data class SettingsUiState(
-    val selectedTheme: AppThemeSetting = ThemeController.selectedTheme.value,
-    val selectedLanguage: String = "Português (Brasil)",
-    val selectedMapEngine: MapEngineType = MapConfig.activeEngine
+    val selectedTheme: AppTheme = AppTheme.SYSTEM,
+    val selectedGoogleMapType: GoogleMapType = GoogleMapType.NORMAL,
+    val selectedMapEngine: MapEngineType = MapEngineType.OSM,
+    val isLoading: Boolean = true // <--- ADICIONADO
 )
-class SettingsViewModel : ViewModel() {
 
-    private val _uiState = MutableStateFlow(SettingsUiState())
-    val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+class SettingsViewModel(private val repository: SettingsRepository) :
+    ViewModel() { // <-- Removi as quebras de linha estranhas aqui
 
-    fun setTheme(theme: AppThemeSetting) {
-        ThemeController.setTheme(theme)
-        _uiState.update { it.copy(selectedTheme = theme) }
+    val uiState: StateFlow<SettingsUiState> =
+        repository.userDataStream.map { userSettings ->
+            SettingsUiState(
+                selectedTheme = userSettings.theme,
+                selectedGoogleMapType = userSettings.googleMapType,
+                selectedMapEngine = userSettings.mapEngine,
+                isLoading = false // <--- Assim que ler do banco, libera a tela
+            )
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = SettingsUiState(isLoading = true) // <--- Começa bloqueado
+        )
+
+    fun setTheme(theme: AppTheme) = viewModelScope.launch {
+        repository.setTheme(theme)
     }
 
-    fun setLanguage(language: String) {
-        _uiState.update { it.copy(selectedLanguage = language) }
+    fun setMapType(googleMapType: GoogleMapType) = viewModelScope.launch {
+        repository.setMapType(googleMapType)
     }
 
-    fun setMapEngine(engine: MapEngineType) {
-        MapConfig.activeEngine = engine
-        _uiState.update { it.copy(selectedMapEngine = engine) }
+    fun setMapEngine(engine: MapEngineType) = viewModelScope.launch {
+        repository.setMapEngine(engine)
     }
 }

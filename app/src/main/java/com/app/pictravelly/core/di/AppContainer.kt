@@ -3,9 +3,12 @@ package com.app.pictravelly.core.di
 import android.content.Context
 import com.app.pictravelly.core.data.OfflineTouristSpotRepository
 import com.app.pictravelly.core.data.OfflineTripRepository
+import com.app.pictravelly.core.data.PreferencesSettingsRepository
+import com.app.pictravelly.core.data.SettingsRepository
 import com.app.pictravelly.core.data.TouristSpotRepository
 import com.app.pictravelly.core.data.TripRepository
 import com.app.pictravelly.core.database.PicTravellyDatabase
+import com.app.pictravelly.core.database.dataStore
 
 /**
  * Container de injeção de dependências manual da aplicação.
@@ -13,6 +16,7 @@ import com.app.pictravelly.core.database.PicTravellyDatabase
 interface AppContainer {
     val touristSpotRepository: TouristSpotRepository
     val tripRepository: TripRepository
+    val settingsRepository: SettingsRepository
 }
 
 /**
@@ -29,6 +33,13 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
     override val tripRepository: TripRepository by lazy {
         OfflineTripRepository(
             PicTravellyDatabase.getDatabase(context).tripDao()
+        )
+    }
+
+    override val settingsRepository: SettingsRepository by lazy {
+        PreferencesSettingsRepository(
+            // Utiliza o delegate que agora mora no core/datastore
+            dataStore = context.dataStore
         )
     }
 }

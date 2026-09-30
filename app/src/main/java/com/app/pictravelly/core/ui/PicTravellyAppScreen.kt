@@ -3,23 +3,11 @@ package com.app.pictravelly.core.ui
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Luggage
-import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,8 +17,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -45,23 +31,24 @@ import com.app.pictravelly.core.design.components.DockDestination
 import com.app.pictravelly.core.design.components.PicTravellyOneUiDock
 import com.app.pictravelly.core.di.AppViewModelProvider
 import com.app.pictravelly.core.navigation.DestinationScreen
-import com.app.pictravelly.feature.home.HomeScreen
+import com.app.pictravelly.core.ui.components.AddEntrySheetContent
+import com.app.pictravelly.feature.home.HomeRoute
 import com.app.pictravelly.feature.home.HomeViewModel
-import com.app.pictravelly.feature.map.MapScreen
+import com.app.pictravelly.feature.map.MapRoute
 import com.app.pictravelly.feature.map.MapViewModel
-import com.app.pictravelly.feature.settings.SettingsScreen
+import com.app.pictravelly.feature.settings.SettingsRoute
 import com.app.pictravelly.feature.settings.SettingsViewModel
-import com.app.pictravelly.feature.spot_detail.SpotDetailScreen
+import com.app.pictravelly.feature.spot_detail.SpotDetailRoute
 import com.app.pictravelly.feature.spot_detail.SpotDetailViewModel
-import com.app.pictravelly.feature.spot_form.SpotFormScreen
+import com.app.pictravelly.feature.spot_form.SpotFormRoute
 import com.app.pictravelly.feature.spot_form.SpotFormViewModel
-import com.app.pictravelly.feature.spots.SpotsListScreen
+import com.app.pictravelly.feature.spots.SpotsRoute
 import com.app.pictravelly.feature.spots.SpotsViewModel
-import com.app.pictravelly.feature.trip_detail.TripDetailScreen
+import com.app.pictravelly.feature.trip_detail.TripDetailRoute
 import com.app.pictravelly.feature.trip_detail.TripDetailViewModel
-import com.app.pictravelly.feature.trip_form.TripFormScreen
+import com.app.pictravelly.feature.trip_form.TripFormRoute
 import com.app.pictravelly.feature.trip_form.TripFormViewModel
-import com.app.pictravelly.feature.trips.TripsListScreen
+import com.app.pictravelly.feature.trips.TripsRoute
 import com.app.pictravelly.feature.trips.TripsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -72,10 +59,13 @@ fun PicTravellyAppScreen() {
     val currentRoute = DestinationScreen.baseRouteOf(
         navBackStackEntry?.destination?.route ?: DestinationScreen.HOME.route
     )
+
+    // Injeção de Dependências Manual do Container
     val context = LocalContext.current
     val app = context.applicationContext as PicTravellyApp
     val spotRepository = app.container.touristSpotRepository
     val tripRepository = app.container.tripRepository
+    val settingsRepository = app.container.settingsRepository // CORREÇÃO: Adicionado
 
     // Oculta o dock nos formulários e nas telas de detalhe
     val shouldShowDock = currentRoute in listOf(
@@ -96,11 +86,11 @@ fun PicTravellyAppScreen() {
                 navController = navController,
                 startDestination = DestinationScreen.HOME.route
             ) {
-                // 1. Rota da Home (Dashboard + Mapa Expansível + Diário)
+                // 1. Rota da Home (Dashboard)
                 composable(DestinationScreen.HOME.route) {
                     val homeViewModel: HomeViewModel =
                         viewModel(factory = AppViewModelProvider.Factory)
-                    HomeScreen(
+                    HomeRoute(
                         viewModel = homeViewModel,
                         onNavigateToDetail = { spotId ->
                             navController.navigate(DestinationScreen.createSpotDetailRoute(spotId))
@@ -111,7 +101,7 @@ fun PicTravellyAppScreen() {
                         onNavigateToCreate = {
                             navController.navigate(DestinationScreen.createSpotFormRoute())
                         },
-                        contentPadding = paddingValues
+                        contentPadding = paddingValues,
                     )
                 }
 
@@ -119,7 +109,7 @@ fun PicTravellyAppScreen() {
                 composable(DestinationScreen.TRIPS.route) {
                     val tripsViewModel: TripsViewModel =
                         viewModel(factory = AppViewModelProvider.Factory)
-                    TripsListScreen(
+                    TripsRoute( // CORREÇÃO: Usando a Route
                         viewModel = tripsViewModel,
                         onNavigateToTripDetail = { tripId ->
                             navController.navigate(DestinationScreen.createTripDetailRoute(tripId))
@@ -131,24 +121,24 @@ fun PicTravellyAppScreen() {
                     )
                 }
 
-                // 3. Rota da aba Mapa: todos os pontos turísticos cadastrados
+                // 3. Rota da aba Mapa: todos os pontos turísticos
                 composable(DestinationScreen.MAP.route) {
                     val mapViewModel: MapViewModel =
                         viewModel(factory = AppViewModelProvider.Factory)
-                    MapScreen(
+                    MapRoute(
                         viewModel = mapViewModel,
+                        contentPadding = paddingValues,
                         onNavigateToSpotDetail = { spotId ->
                             navController.navigate(DestinationScreen.createSpotDetailRoute(spotId))
                         },
-                        contentPadding = paddingValues
                     )
                 }
 
-                // 4. Rota de busca em todos os pontos (alcançada pela aba Diário)
+                // 4. Rota de busca em todos os pontos
                 composable(DestinationScreen.SPOTS.route) {
                     val spotsViewModel: SpotsViewModel =
                         viewModel(factory = AppViewModelProvider.Factory)
-                    SpotsListScreen(
+                    SpotsRoute( // CORREÇÃO: Usando a Route
                         viewModel = spotsViewModel,
                         onNavigateToDetail = { spotId ->
                             navController.navigate(DestinationScreen.createSpotDetailRoute(spotId))
@@ -157,7 +147,7 @@ fun PicTravellyAppScreen() {
                     )
                 }
 
-                // 5. Rota de Cadastro de Ponto Turístico (com a viagem opcional na rota)
+                // 5. Rota de Cadastro de Ponto Turístico
                 composable(
                     route = DestinationScreen.SPOT_FORM_ROUTE,
                     arguments = listOf(
@@ -169,14 +159,17 @@ fun PicTravellyAppScreen() {
                 ) { backStackEntry ->
                     val tripId = backStackEntry.arguments?.getLong("tripId")
                         ?: DestinationScreen.NO_TRIP_ID
+
                     val spotFormViewModel: SpotFormViewModel = viewModel(
                         factory = AppViewModelProvider.createSpotFormFactory(
                             tripId = tripId,
                             spotRepository = spotRepository,
-                            tripRepository = tripRepository
+                            tripRepository = tripRepository,
+                            settingsRepository = settingsRepository // CORREÇÃO: Adicionado
                         )
                     )
-                    SpotFormScreen(
+
+                    SpotFormRoute( // CORREÇÃO: Usando a Route
                         viewModel = spotFormViewModel,
                         onNavigateBack = { navController.popBackStack() },
                         onSpotSaved = { spotId ->
@@ -198,19 +191,23 @@ fun PicTravellyAppScreen() {
                 ) { backStackEntry ->
                     val tripId = backStackEntry.arguments?.getLong("tripId")
                         ?: DestinationScreen.NO_TRIP_ID
+
                     val tripFormViewModel: TripFormViewModel = viewModel(
                         factory = AppViewModelProvider.createTripFormFactory(
                             tripId = tripId,
                             tripRepository = tripRepository
                         )
                     )
-                    TripFormScreen(
+
+                    TripFormRoute( // CORREÇÃO: Usando a Route
                         viewModel = tripFormViewModel,
                         onNavigateBack = { navController.popBackStack() },
                         onTripSaved = { savedTripId ->
                             navController.popBackStack()
                             navController.navigate(
-                                DestinationScreen.createTripDetailRoute(savedTripId)
+                                DestinationScreen.createTripDetailRoute(
+                                    savedTripId
+                                )
                             )
                         }
                     )
@@ -220,19 +217,20 @@ fun PicTravellyAppScreen() {
                 composable(DestinationScreen.SETTINGS.route) {
                     val settingsViewModel: SettingsViewModel =
                         viewModel(factory = AppViewModelProvider.Factory)
-                    SettingsScreen(
+                    SettingsRoute(
                         viewModel = settingsViewModel,
                         contentPadding = paddingValues
                     )
                 }
 
-                // 8. Rota de Detalhe da Viagem (os pontos turísticos dela)
+                // 8. Rota de Detalhe da Viagem
                 composable(
                     route = DestinationScreen.TRIP_DETAIL_ROUTE,
                     arguments = listOf(navArgument("tripId") { type = NavType.LongType })
                 ) { backStackEntry ->
                     val tripId = backStackEntry.arguments?.getLong("tripId")
                         ?: DestinationScreen.NO_TRIP_ID
+
                     val tripDetailViewModel: TripDetailViewModel = viewModel(
                         factory = AppViewModelProvider.createTripDetailFactory(
                             tripId = tripId,
@@ -240,18 +238,19 @@ fun PicTravellyAppScreen() {
                             spotRepository = spotRepository
                         )
                     )
-                    TripDetailScreen(
+
+                    TripDetailRoute( // CORREÇÃO: Usando a Route
                         viewModel = tripDetailViewModel,
                         onNavigateBack = { navController.popBackStack() },
                         onEditTrip = { editingTripId ->
                             navController.navigate(
-                                DestinationScreen.createTripFormRoute(editingTripId)
+                                DestinationScreen.createTripFormRoute(
+                                    editingTripId
+                                )
                             )
                         },
                         onAddSpot = {
-                            navController.navigate(
-                                DestinationScreen.createSpotFormRoute(tripId)
-                            )
+                            navController.navigate(DestinationScreen.createSpotFormRoute(tripId))
                         },
                         onNavigateToSpotDetail = { spotId ->
                             navController.navigate(DestinationScreen.createSpotDetailRoute(spotId))
@@ -265,13 +264,16 @@ fun PicTravellyAppScreen() {
                     arguments = listOf(navArgument("spotId") { type = NavType.LongType })
                 ) { backStackEntry ->
                     val spotId = backStackEntry.arguments?.getLong("spotId") ?: 0L
+
                     val spotDetailViewModel: SpotDetailViewModel = viewModel(
                         factory = AppViewModelProvider.createSpotDetailFactory(
-                            spotId,
-                            spotRepository
+                            spotId = spotId,
+                            spotRepository = spotRepository,
+                            settingsRepository = settingsRepository // CORREÇÃO: Adicionado
                         )
                     )
-                    SpotDetailScreen(
+
+                    SpotDetailRoute( // CORREÇÃO: Usando a Route
                         viewModel = spotDetailViewModel,
                         onNavigateBack = { navController.popBackStack() }
                     )
@@ -279,7 +281,7 @@ fun PicTravellyAppScreen() {
             }
         }
 
-        // Dock translúcido flutuante One UI 9 posicionado sobre a tela
+        // Dock translúcido flutuante One UI
         AnimatedVisibility(
             visible = shouldShowDock,
             modifier = Modifier.align(Alignment.BottomCenter),
@@ -302,21 +304,20 @@ fun PicTravellyAppScreen() {
         }
     }
 
-    // ============================================================================
-    // ➕ FOLHA DO BOTÃO CENTRAL: escolha entre nova viagem e novo ponto turístico
-    // ============================================================================
     if (showAddSheet) {
         ModalBottomSheet(
-            onDismissRequest = { showAddSheet = false },
+            onDismissRequest = {
+                showAddSheet = false
+            }, // CORREÇÃO: Garante o fechamento ao tocar fora
             sheetState = addSheetState
         ) {
             AddEntrySheetContent(
                 onNewTrip = {
-                    showAddSheet = false
+                    showAddSheet = false // CORREÇÃO: Fecha a folha ao navegar
                     navController.navigate(DestinationScreen.createTripFormRoute())
                 },
                 onNewSpot = {
-                    showAddSheet = false
+                    showAddSheet = false // CORREÇÃO: Fecha a folha ao navegar
                     navController.navigate(DestinationScreen.createSpotFormRoute())
                 }
             )
@@ -324,59 +325,6 @@ fun PicTravellyAppScreen() {
     }
 }
 
-/**
- * Conteúdo da folha aberta pelo "+" do dock.
- */
-@Composable
-private fun AddEntrySheetContent(
-    onNewTrip: () -> Unit,
-    onNewSpot: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
-            .padding(bottom = 16.dp)
-    ) {
-        Text(
-            text = "O que você quer registrar?",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 10.dp)
-        )
-
-        ListItem(
-            headlineContent = { Text("Nova viagem") },
-            supportingContent = { Text("Abre um capítulo novo no diário") },
-            leadingContent = {
-                Icon(
-                    imageVector = Icons.Default.Luggage,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            },
-            modifier = Modifier.clickable(onClick = onNewTrip)
-        )
-
-        ListItem(
-            headlineContent = { Text("Novo ponto turístico") },
-            supportingContent = { Text("Geocódigos, endereço, fotos e relato") },
-            leadingContent = {
-                Icon(
-                    imageVector = Icons.Default.Place,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            },
-            modifier = Modifier.clickable(onClick = onNewSpot)
-        )
-    }
-}
-
-/**
- * Navegação entre as abas do dock, preservando o estado de cada uma.
- */
 private fun NavHostController.navigateToTab(route: String) {
     navigate(route) {
         popUpTo(graph.findStartDestination().id) { saveState = true }
