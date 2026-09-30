@@ -1,4 +1,4 @@
-package com.app.pictravelly.core.map.components
+package com.app.pictravelly.core.map.components.previewCard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -31,13 +31,13 @@ import com.app.pictravelly.core.database.model.settings.GoogleMapType
 import com.app.pictravelly.core.database.model.settings.MapEngineType
 import com.app.pictravelly.core.design.components.PicTravellyCard
 import com.app.pictravelly.core.design.theme.PicTravellyTheme
-import com.app.pictravelly.core.map.MapMarkerData
 import com.app.pictravelly.core.map.PicTravellyMap
+import com.app.pictravelly.core.map.model.MapMarkerData
 
 /**
  * Card de mapa genérico reutilizável em todo o aplicativo.
  * A persistência do zoom e a escolha da engine são tratadas internamente pelo PicTravellyMap caso não fornecidas.
-STATELESS: Recebe engine e zoom estritamente da tela que o hospeda.
+ * STATELESS: Recebe engine e zoom estritamente da tela que o hospeda.
  */
 @Composable
 fun PicTravellyPreviewMapCard(
@@ -68,7 +68,7 @@ fun PicTravellyPreviewMapCard(
                     onMarkerSelect(marker.id)
                 },
                 modifier = Modifier.fillMaxSize(),
-                isInteractive = false, // CORREÇÃO: Miniaturas em listas NUNCA devem roubar o scroll da tela principal
+                isInteractive = false, // Miniaturas em listas NUNCA devem roubar o scroll da tela principal
                 onMapClick = onExpandClick,
                 googleMapType = googleMapType
             )
@@ -135,8 +135,8 @@ private fun PicTravellyPreviewMapCardPreview() {
         PicTravellyPreviewMapCard(
             currentLatitude = -23.55052,
             currentLongitude = -46.633308,
-            engine = MapEngineType.OSM, // Mock obrigatório para o Preview
-            zoom = 14f,                 // Mock obrigatório para o Preview
+            engine = MapEngineType.OSM,
+            zoom = 14f,
             markers = sampleMarkers,
             onExpandClick = {},
             onMarkerSelect = {},

@@ -24,8 +24,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.app.pictravelly.core.database.model.settings.MapEngineType
 import com.app.pictravelly.core.database.model.settings.GoogleMapType
+import com.app.pictravelly.core.database.model.settings.MapEngineType
+import com.app.pictravelly.core.map.model.MapMarkerData
 import com.app.pictravelly.core.map.provider.GoogleMapComponent
 import com.app.pictravelly.core.map.provider.OsmMapComponent
 import kotlin.math.roundToInt
@@ -77,11 +78,11 @@ fun PicTravellyMap(
                     zoom = zoom,
                     markers = markers,
                     onMarkerClick = onMarkerClick,
+                    onZoomChange = onZoomChange,
                     modifier = Modifier.matchParentSize(),
                     isInteractive = isInteractive,
                     onMapClick = onMapClick,
                     onLocationPick = onLocationPick,
-                    onZoomChange = onZoomChange,
                     googleMapType = googleMapType,
                     centerTrigger = centerTrigger
                 )
@@ -97,8 +98,9 @@ fun PicTravellyMap(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Indicador de percentual
-                val zoomPercentage = ((zoom / 20f) * 100).roundToInt().coerceIn(0, 100)
+                // CORREÇÃO UX: Normaliza o zoom! (3.0 é o limite do Google Maps, então 3 = 0% e 20 = 100%)
+                val normalizedZoom = (zoom - 3f).coerceIn(0f, 17f)
+                val zoomPercentage = ((normalizedZoom / 17f) * 100).roundToInt()
 
                 Box(
                     modifier = Modifier
@@ -116,7 +118,6 @@ fun PicTravellyMap(
                     )
                 }
 
-                // Botões disparam evento com coerção, a UI não guarda o valor
                 IconButton(
                     onClick = { onZoomChange?.invoke((zoom + 1f).coerceAtMost(20f)) },
                     modifier = Modifier
@@ -131,7 +132,8 @@ fun PicTravellyMap(
                 }
 
                 IconButton(
-                    onClick = { onZoomChange?.invoke((zoom - 1f).coerceAtLeast(1f)) },
+                    // CORREÇÃO: Impede que o botão tente enviar um zoom menor que 3f para a ViewModel
+                    onClick = { onZoomChange?.invoke((zoom - 1f).coerceAtLeast(3f)) },
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape),

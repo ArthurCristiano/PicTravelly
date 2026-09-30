@@ -10,6 +10,7 @@ import com.app.pictravelly.PicTravellyApp
 import com.app.pictravelly.core.data.SettingsRepository
 import com.app.pictravelly.core.data.TouristSpotRepository
 import com.app.pictravelly.core.data.TripRepository
+import com.app.pictravelly.core.map.MapConfigViewModel
 import com.app.pictravelly.feature.home.HomeViewModel
 import com.app.pictravelly.feature.map.MapViewModel
 import com.app.pictravelly.feature.settings.SettingsViewModel
@@ -30,7 +31,6 @@ object AppViewModelProvider {
         initializer {
             HomeViewModel(
                 touristSpotRepository = picTravellyApplication().container.touristSpotRepository,
-                settingsRepository = picTravellyApplication().container.settingsRepository
             )
         }
 
@@ -52,7 +52,6 @@ object AppViewModelProvider {
         initializer {
             MapViewModel(
                 touristSpotRepository = picTravellyApplication().container.touristSpotRepository,
-                settingsRepository = picTravellyApplication().container.settingsRepository
             )
         }
 
@@ -66,6 +65,13 @@ object AppViewModelProvider {
         // Inicializador do MainActivityViewModel
         initializer {
             MainActivityViewModel(
+                settingsRepository = picTravellyApplication().container.settingsRepository
+            )
+        }
+
+        // Inicializador do MapConfigViewModel
+        initializer {
+            MapConfigViewModel(
                 settingsRepository = picTravellyApplication().container.settingsRepository
             )
         }

@@ -46,7 +46,7 @@ fun MapHeaderChip(
             },
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.secondary
         )
     }
 }

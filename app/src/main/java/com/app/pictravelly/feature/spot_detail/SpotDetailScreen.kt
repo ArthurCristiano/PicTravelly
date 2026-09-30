@@ -29,9 +29,9 @@ import com.app.pictravelly.core.database.model.settings.MapEngineType
 import com.app.pictravelly.core.design.components.PicTravellyCard
 import com.app.pictravelly.core.design.components.PicTravellyText
 import com.app.pictravelly.core.design.components.PicTravellyTitle
-import com.app.pictravelly.core.map.MapMarkerData
-import com.app.pictravelly.core.map.components.PicTravellyExpandedMapView
-import com.app.pictravelly.core.map.components.PicTravellyPreviewMapCard
+import com.app.pictravelly.core.map.model.MapMarkerData
+import com.app.pictravelly.core.map.components.expandedMap.PicTravellyExpandedMapView
+import com.app.pictravelly.core.map.components.previewCard.PicTravellyPreviewMapCard
 import com.app.pictravelly.feature.spot_detail.components.DetailSpotFloatingCard
 import java.text.SimpleDateFormat
 import java.util.Date

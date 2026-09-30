@@ -45,13 +45,7 @@ fun PicTravellySelectedSpotFloatingCard(
 ) {
     AnimatedVisibility(
         visible = selectedSpot != null,
-        modifier = modifier
-            .navigationBarsPadding() // Garante que não fique atrás do menu de navegação do SO
-            .padding(
-                bottom = 100.dp,
-                start = 16.dp,
-                end = 16.dp
-            ), // Ajustado o bottom padding para o BottomNavigation
+        modifier = modifier.navigationBarsPadding(), // O padding bottom extra deve vir pelo modifier do pai!
         enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
         exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
     ) {
@@ -59,8 +53,12 @@ fun PicTravellySelectedSpotFloatingCard(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
+                    .padding(
+                        horizontal = 16.dp,
+                        vertical = 16.dp
+                    ) // Paddings internos do componente
                     .clickable { onNavigateToDetail(selected.spot.id) },
+                shape = RoundedCornerShape(20.dp), // <--- Forma correta de arredondar um Card
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
                 ),
@@ -76,7 +74,7 @@ fun PicTravellySelectedSpotFloatingCard(
                             contentDescription = selected.spot.title,
                             modifier = Modifier
                                 .size(72.dp)
-                                .clip(RoundedCornerShape(12.dp)),
+                                .clip(RoundedCornerShape(12.dp)), // Aqui o clip faz sentido, pois AsyncImage não tem parâmetro shape
                             contentScale = ContentScale.Crop
                         )
                         Spacer(modifier = Modifier.width(14.dp))

@@ -33,7 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.app.pictravelly.core.design.components.PicTravellyCard
-import com.app.pictravelly.core.map.MapMarkerData
+import com.app.pictravelly.core.map.model.MapMarkerData
 import com.app.pictravelly.core.map.PicTravellyMap
 import com.app.pictravelly.feature.spot_form.SpotFormUiState
 

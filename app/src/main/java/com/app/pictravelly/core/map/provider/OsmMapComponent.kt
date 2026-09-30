@@ -1,5 +1,6 @@
 package com.app.pictravelly.core.map.provider
 
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -7,13 +8,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.app.pictravelly.core.database.model.settings.GoogleMapType
-import com.app.pictravelly.core.map.MapMarkerData
+import com.app.pictravelly.core.map.model.MapMarkerData
+import com.app.pictravelly.core.map.model.MarkerType
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.events.MapListener
@@ -50,6 +54,9 @@ fun OsmMapComponent(
     val currentOnLocationPick by rememberUpdatedState(onLocationPick)
     val currentOnMarkerClick by rememberUpdatedState(onMarkerClick)
     val currentOnZoomChange by rememberUpdatedState(onZoomChange)
+
+    val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
+    val secondaryColor = MaterialTheme.colorScheme.secondary.toArgb()
 
     remember {
         Configuration.getInstance().userAgentValue = context.packageName
@@ -113,9 +120,18 @@ fun OsmMapComponent(
         }
     }
 
-    // Dispara a animação sempre que mudar lat/long OU o gatilho do botão for acionado
+    // ÚNICO GATILHO DE MOVIMENTO:
+    // Dispara a animação sempre que mudar lat/long externamente OU o gatilho do botão for acionado
     LaunchedEffect(latitude, longitude, centerTrigger) {
-        mapView.controller.animateTo(GeoPoint(latitude, longitude))
+        val currentCenter = mapView.mapCenter
+        val latDiff = abs(currentCenter.latitude - latitude)
+        val lonDiff = abs(currentCenter.longitude - longitude)
+
+        // Evita chamadas de animação desnecessárias se o mapa já estiver no lugar certo
+        // (mas força a ida se o trigger de centralizar tiver sido acionado)
+        if (latDiff > 0.0001 || lonDiff > 0.0001 || centerTrigger > 0) {
+            mapView.controller.animateTo(GeoPoint(latitude, longitude))
+        }
     }
 
     DisposableEffect(lifecycleOwner) {
@@ -151,8 +167,33 @@ fun OsmMapComponent(
                     title = markerData.title
                     snippet = markerData.snippet
                     setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+
+                    // Customização Visual do OSM (Usando o ícone base do OSM e alterando a cor)
+                    when (markerData.type) {
+                        MarkerType.USER_LOCATION -> {
+                            // Pinta o ícone padrão do OSM de AZUL (ou carregue o getOsmTintedMarker criado no passo 2)
+                            val defaultIcon = ContextCompat.getDrawable(
+                                context,
+                                org.osmdroid.library.R.drawable.marker_default
+                            )?.mutate()
+                            defaultIcon?.setTint(primaryColor) // Cor do usuário
+                            icon = defaultIcon
+                        }
+
+                        MarkerType.TOURIST_SPOT -> {
+                            val defaultIcon = ContextCompat.getDrawable(
+                                context,
+                                org.osmdroid.library.R.drawable.marker_default
+                            )?.mutate()
+                            defaultIcon?.setTint(secondaryColor) // Cor dos spots
+                            icon = defaultIcon
+                        }
+                    }
+
                     setOnMarkerClickListener { _, _ ->
-                        currentOnMarkerClick(markerData)
+                        if (markerData.type == MarkerType.TOURIST_SPOT) {
+                            currentOnMarkerClick(markerData)
+                        }
                         true
                     }
                 }

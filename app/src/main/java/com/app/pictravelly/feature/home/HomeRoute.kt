@@ -1,12 +1,8 @@
 package com.app.pictravelly.feature.home
 
-import android.Manifest
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -34,34 +30,6 @@ fun HomeRoute(
         viewModel.setMapExpanded(false)
     }
 
-    // Permissões do Android
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-        if (granted) {
-            coroutineScope.launch {
-                val (lat, lng) = LocationHelper.getCurrentLocation(context)
-                viewModel.updateCurrentLocation(lat, lng)
-            }
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        if (LocationHelper.hasLocationPermission(context)) {
-            val (lat, lng) = LocationHelper.getCurrentLocation(context)
-            viewModel.updateCurrentLocation(lat, lng)
-        } else {
-            permissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            )
-        }
-    }
-
     HomeScreen(
         uiState = uiState,
         contentPadding = contentPadding,
@@ -70,9 +38,14 @@ fun HomeRoute(
         onNavigateToDetail = onNavigateToDetail,
         onNavigateToSpots = onNavigateToSpots,
         onNavigateToCreate = onNavigateToCreate,
-        modifier = modifier,
-        onZoomChange = viewModel::updateZoom,
-        onEngineChange = viewModel::updateMapEngine,
-        onMapTypeChange = viewModel::updateGoogleMapType
+
+        // CONEXÃO REATIVA: A tela chama isso quando o GPS ligar ou a permissão for dada
+        onFetchLocationRequested = {
+            coroutineScope.launch {
+                val (lat, lng) = LocationHelper.getCurrentLocation(context)
+                viewModel.updateCurrentLocation(lat, lng)
+            }
+        },
+        modifier = modifier
     )
 }

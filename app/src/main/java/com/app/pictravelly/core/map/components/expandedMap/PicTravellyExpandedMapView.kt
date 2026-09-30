@@ -1,4 +1,4 @@
-package com.app.pictravelly.core.map.components
+package com.app.pictravelly.core.map.components.expandedMap
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,10 +30,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.app.pictravelly.core.database.model.settings.GoogleMapType
 import com.app.pictravelly.core.database.model.settings.MapEngineType
-import com.app.pictravelly.core.map.MapMarkerData
 import com.app.pictravelly.core.map.PicTravellyMap
+import com.app.pictravelly.core.map.components.MapSettingsDialog
+import com.app.pictravelly.core.map.components.mapLegend.MapLegendCard
+import com.app.pictravelly.core.map.model.MapMarkerData
 
 @Composable
 fun PicTravellyExpandedMapView(
@@ -48,7 +51,7 @@ fun PicTravellyExpandedMapView(
     googleMapType: GoogleMapType,
     onEngineChange: ((MapEngineType) -> Unit)? = null,
     onMapTypeChange: ((GoogleMapType) -> Unit)? = null,
-    onCenterOnUser: (() -> Unit)? = null, // <--- NOVO: Callback para centralizar no usuário
+    onCenterOnUser: (() -> Unit)? = null,
     centerTrigger: Int = 0,
     modifier: Modifier = Modifier,
     showCloseButton: Boolean = true,
@@ -77,9 +80,7 @@ fun PicTravellyExpandedMapView(
             zoom = ephemeralZoom,
             markers = markers,
             onMarkerClick = onMarkerClick,
-            onZoomChange = { newZoom ->
-                ephemeralZoom = newZoom
-            },
+            onZoomChange = { newZoom -> ephemeralZoom = newZoom },
             modifier = Modifier.fillMaxSize(),
             isInteractive = true,
             engine = engine,
@@ -88,6 +89,18 @@ fun PicTravellyExpandedMapView(
         )
 
         topContent?.let { it() }
+
+        // Componente Flutuante de Legenda (Canto Superior Esquerdo)
+        MapLegendCard(
+            markers = markers,
+            onMarkerClick = onMarkerClick,
+            onCenterOnUser = onCenterOnUser,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .statusBarsPadding()
+                .padding(16.dp)
+                .zIndex(10f)
+        )
 
         // Linha superior com os botões de Ação (Centralizar + Configurações + Fechar)
         Row(
@@ -98,7 +111,6 @@ fun PicTravellyExpandedMapView(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Botão de Centralizar na Localização Atual
             if (onCenterOnUser != null) {
                 Box(
                     modifier = Modifier
@@ -117,7 +129,6 @@ fun PicTravellyExpandedMapView(
                 }
             }
 
-            // Botão de Configurações (Engrenagem)
             if (onEngineChange != null && onMapTypeChange != null) {
                 Box(
                     modifier = Modifier
@@ -136,7 +147,6 @@ fun PicTravellyExpandedMapView(
                 }
             }
 
-            // Botão de Fechar ("X")
             if (showCloseButton) {
                 Box(
                     modifier = Modifier

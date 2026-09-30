@@ -17,6 +17,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role // <--- Import necessário
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.app.pictravelly.core.database.model.settings.GoogleMapType
@@ -57,20 +58,22 @@ fun MapSettingsDialog(
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     MapEngineType.entries.forEach { engine ->
                         Row(
-                            modifier = androidx.compose.ui.Modifier
+                            modifier = Modifier
                                 .fillMaxWidth()
                                 .selectable(
                                     selected = (engine == currentEngine),
-                                    onClick = { onEngineChanged(engine) }
+                                    onClick = { onEngineChanged(engine) },
+                                    role = Role.RadioButton // <--- ADICIONADO PARA ACESSIBILIDADE
                                 )
                                 .padding(vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(
                                 selected = (engine == currentEngine),
-                                onClick = { onEngineChanged(engine) }
+                                onClick = null // <--- O clique já é gerenciado pela Row
                             )
                             Text(
+                                // Se MapEngineType tiver um .label no futuro, você pode usar engine.label aqui
                                 text = if (engine == MapEngineType.OSM) "OpenStreetMap (OSM)" else "Google Maps",
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.padding(start = 8.dp)
@@ -96,14 +99,15 @@ fun MapSettingsDialog(
                                 .fillMaxWidth()
                                 .selectable(
                                     selected = (type == currentMapType),
-                                    onClick = { onMapTypeChanged(type) }
+                                    onClick = { onMapTypeChanged(type) },
+                                    role = Role.RadioButton // <--- ADICIONADO PARA ACESSIBILIDADE
                                 )
                                 .padding(vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(
                                 selected = (type == currentMapType),
-                                onClick = { onMapTypeChanged(type) }
+                                onClick = null // <--- O clique já é gerenciado pela Row
                             )
                             Text(
                                 text = type.label,

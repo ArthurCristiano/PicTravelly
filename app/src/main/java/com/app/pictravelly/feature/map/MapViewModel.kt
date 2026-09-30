@@ -2,20 +2,17 @@ package com.app.pictravelly.feature.map
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.app.pictravelly.core.data.SettingsRepository
 import com.app.pictravelly.core.data.TouristSpotRepository
-import com.app.pictravelly.core.database.model.settings.GoogleMapType
-import com.app.pictravelly.core.database.model.settings.MapEngineType
 import com.app.pictravelly.core.database.model.touristSpot.TouristSpotWithImages
 import com.app.pictravelly.core.location.LocationHelper
-import com.app.pictravelly.core.map.MapMarkerData
+import com.app.pictravelly.core.map.model.MapMarkerData
+import com.app.pictravelly.core.map.model.MarkerType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 
 /**
  * Estado dinâmico provisório (Ações do usuário na tela).
@@ -25,7 +22,6 @@ private data class MapTransientState(
     val currentLatitude: Double = LocationHelper.DEFAULT_LATITUDE,
     val currentLongitude: Double = LocationHelper.DEFAULT_LONGITUDE,
     val isLoadingLocation: Boolean = true,
-    val centerTrigger: Int = 0 // <--- Essencial para disparar o gatilho infinitas vezes
 )
 
 /**
@@ -36,31 +32,40 @@ data class MapUiState(
     val selectedSpot: TouristSpotWithImages? = null,
     val currentLatitude: Double = LocationHelper.DEFAULT_LATITUDE,
     val currentLongitude: Double = LocationHelper.DEFAULT_LONGITUDE,
-    val isLoading: Boolean = true,
-    val mapEngine: MapEngineType = MapEngineType.OSM,
-    val mapZoom: Float = 13f,
-    val isLoadingSettings: Boolean = true,
-    val googleMapType: GoogleMapType = GoogleMapType.NORMAL,
-    val centerTrigger: Int = 0 // <--- Repassado para a UI
+    val isLoading: Boolean = true
 ) {
     val markers: List<MapMarkerData>
-        get() = spots.map { spotWithImages ->
-            MapMarkerData(
-                id = spotWithImages.spot.id,
-                title = spotWithImages.spot.title,
-                snippet = spotWithImages.spot.locationName,
-                latitude = spotWithImages.spot.latitude,
-                longitude = spotWithImages.spot.longitude
+        get() {
+            // 1. Mapeia os pontos turísticos normais
+            val spotMarkers = spots.map { spotWithImages ->
+                MapMarkerData(
+                    id = spotWithImages.spot.id,
+                    title = spotWithImages.spot.title,
+                    snippet = spotWithImages.spot.locationName,
+                    latitude = spotWithImages.spot.latitude,
+                    longitude = spotWithImages.spot.longitude,
+                    type = MarkerType.TOURIST_SPOT // Pino normal
+                )
+            }
+
+            // 2. Cria o pino do Usuário (ID negativo para não conflitar com o banco de dados)
+            val userMarker = MapMarkerData(
+                id = -1L,
+                title = "Você está aqui",
+                snippet = "Sua localização atual",
+                latitude = currentLatitude,
+                longitude = currentLongitude,
+                type = MarkerType.USER_LOCATION // Pino estilizado!
             )
+
+            return spotMarkers + userMarker
         }
 
     val focusLatitude: Double
-        get() = selectedSpot?.spot?.latitude ?: spots.firstOrNull()?.spot?.latitude
-        ?: currentLatitude
+        get() = selectedSpot?.spot?.latitude ?: currentLatitude
 
     val focusLongitude: Double
-        get() = selectedSpot?.spot?.longitude ?: spots.firstOrNull()?.spot?.longitude
-        ?: currentLongitude
+        get() = selectedSpot?.spot?.longitude ?: currentLongitude
 }
 
 /**
@@ -68,32 +73,25 @@ data class MapUiState(
  */
 class MapViewModel(
     touristSpotRepository: TouristSpotRepository,
-    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val _transientState = MutableStateFlow(MapTransientState())
 
     val uiState: StateFlow<MapUiState> = combine(
         touristSpotRepository.getAllSpotsStream(),
-        settingsRepository.userDataStream,
         _transientState
-    ) { spotsList, userSettings, transient ->
+    ) { spotsList, transient ->
         MapUiState(
             spots = spotsList,
             selectedSpot = transient.selectedSpot,
             currentLatitude = transient.currentLatitude,
             currentLongitude = transient.currentLongitude,
-            isLoading = false,
-            mapEngine = userSettings?.mapEngine ?: MapEngineType.OSM,
-            mapZoom = userSettings?.lastZoom ?: 13f,
-            isLoadingSettings = false,
-            googleMapType = userSettings?.googleMapType ?: GoogleMapType.NORMAL,
-            centerTrigger = transient.centerTrigger // <--- Mapeia o gatilho da transient state para a UiState
+            isLoading = false
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = MapUiState(isLoadingSettings = true)
+        initialValue = MapUiState()
     )
 
     fun updateCurrentLocation(lat: Double, lng: Double) {
@@ -109,35 +107,5 @@ class MapViewModel(
 
     fun clearSelection() {
         _transientState.update { it.copy(selectedSpot = null) }
-    }
-
-    fun updateZoom(newZoom: Float) {
-        viewModelScope.launch {
-            settingsRepository.setLastZoom(newZoom)
-        }
-    }
-
-    fun updateMapEngine(newEngine: MapEngineType) {
-        viewModelScope.launch {
-            settingsRepository.setMapEngine(newEngine)
-        }
-    }
-
-    fun updateGoogleMapType(newMapType: GoogleMapType) {
-        viewModelScope.launch {
-            settingsRepository.setMapType(newMapType)
-        }
-    }
-
-    /**
-     * Incrementa o trigger e limpa a seleção para forçar o mapa a animar para a localização do usuário.
-     */
-    fun centerOnUserLocation() {
-        _transientState.update {
-            it.copy(
-                selectedSpot = null,
-                centerTrigger = it.centerTrigger + 1
-            )
-        }
     }
 }

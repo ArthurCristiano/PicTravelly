@@ -27,12 +27,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,14 +39,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.app.pictravelly.core.database.model.settings.GoogleMapType
-import com.app.pictravelly.core.database.model.settings.MapEngineType
 import com.app.pictravelly.core.database.model.touristSpot.TouristSpotWithImages
 import com.app.pictravelly.core.design.components.PicTravellyButton
 import com.app.pictravelly.core.design.theme.PicTravellyTheme
-import com.app.pictravelly.core.map.MapMarkerData
-import com.app.pictravelly.core.map.components.PicTravellyExpandedMapView
-import com.app.pictravelly.core.map.components.PicTravellyPreviewMapCard
+import com.app.pictravelly.core.map.components.expandedMap.PicTravellySmartMapView
+import com.app.pictravelly.core.map.components.previewCard.PicTravellySmartPreviewMapCard
 import com.app.pictravelly.feature.home.components.HomeGamificationCard
 import com.app.pictravelly.feature.home.components.HomeHeaderSection
 import com.app.pictravelly.feature.home.components.HomeNewEntryActionCard
@@ -63,23 +58,9 @@ fun HomeScreen(
     onNavigateToDetail: (Long) -> Unit,
     onNavigateToSpots: () -> Unit,
     onNavigateToCreate: () -> Unit,
-    onZoomChange: (Float) -> Unit,
-    onEngineChange: (MapEngineType) -> Unit,
-    onMapTypeChange: (GoogleMapType) -> Unit,
+    onFetchLocationRequested: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val markersForMap = remember(uiState.spots) {
-        uiState.spots.map { spotWithImages ->
-            MapMarkerData(
-                id = spotWithImages.spot.id,
-                title = spotWithImages.spot.title,
-                snippet = spotWithImages.spot.locationName,
-                latitude = spotWithImages.spot.latitude,
-                longitude = spotWithImages.spot.longitude
-            )
-        }
-    }
-
     Box(modifier = modifier.fillMaxSize()) {
 
         // Modo Normal: Dashboard Rolável
@@ -103,33 +84,20 @@ fun HomeScreen(
                 totalSpots = uiState.totalSpotsCount
             )
 
-            if (uiState.isLoadingSettings) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                }
-            } else {
-                PicTravellyPreviewMapCard(
-                    currentLatitude = uiState.currentLatitude,
-                    currentLongitude = uiState.currentLongitude,
-                    markers = markersForMap,
-                    engine = uiState.mapEngine,
-                    zoom = uiState.mapZoom,
-                    googleMapType = uiState.googleMapType,
-                    onExpandClick = { onMapExpandedChange(true) },
-                    onMarkerSelect = { markerId ->
-                        val selected = uiState.spots.firstOrNull { it.spot.id == markerId }
-                        if (selected != null) {
-                            onSpotSelect(selected)
-                            onMapExpandedChange(true)
-                        }
+            PicTravellySmartPreviewMapCard(
+                currentLatitude = uiState.currentLatitude,
+                currentLongitude = uiState.currentLongitude,
+                markers = uiState.markers, // <--- Usa diretamente da UiState
+                onExpandClick = { onMapExpandedChange(true) },
+                onMarkerSelect = { markerId ->
+                    val selected = uiState.spots.firstOrNull { it.spot.id == markerId }
+                    if (selected != null) {
+                        onSpotSelect(selected)
+                        onMapExpandedChange(true)
                     }
-                )
-            }
+                },
+                onFetchLocationRequested = onFetchLocationRequested
+            )
 
             HomeNewEntryActionCard(
                 onNavigateToCreate = onNavigateToCreate
@@ -150,29 +118,26 @@ fun HomeScreen(
             enter = fadeIn(),
             exit = fadeOut()
         ) {
-            PicTravellyExpandedMapView(
+            PicTravellySmartMapView(
                 latitude = uiState.currentLatitude,
                 longitude = uiState.currentLongitude,
-                engine = uiState.mapEngine,
-                zoom = uiState.mapZoom,
-                markers = markersForMap,
+                markers = uiState.markers, // <--- Usa diretamente da UiState
                 onClose = { onMapExpandedChange(false) },
-                onZoomChange = onZoomChange, // Repassa a interação para a rota/viewmodel
-                googleMapType = uiState.googleMapType,
                 onMarkerClick = { marker ->
                     val selected = uiState.spots.firstOrNull { it.spot.id == marker.id }
                     if (selected != null) onSpotSelect(selected)
                 },
-                // SLOT API: O componente global abre o espaço, a Feature injeta a UI
+                onFetchLocationRequested = onFetchLocationRequested,
                 bottomContent = {
                     SelectedSpotFloatingCard(
                         selectedSpot = uiState.selectedSpot,
                         onNavigateToDetail = onNavigateToDetail,
-                        modifier = Modifier.align(Alignment.BottomCenter)
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = contentPadding.calculateBottomPadding()) // <--- Correção do Bottom Nav
                     )
                 },
-                onEngineChange = onEngineChange,
-                onMapTypeChange = onMapTypeChange,
+                showCloseButton = true
             )
         }
     }
@@ -262,19 +227,14 @@ private fun SelectedSpotFloatingCard(
 private fun HomeScreenPreview() {
     PicTravellyTheme {
         HomeScreen(
-            uiState = HomeUiState(
-                mapEngine = MapEngineType.OSM,
-                mapZoom = 13.toFloat()
-            ),
+            uiState = HomeUiState(),
             contentPadding = PaddingValues(0.dp),
             onMapExpandedChange = {},
             onSpotSelect = {},
             onNavigateToDetail = {},
             onNavigateToSpots = {},
             onNavigateToCreate = {},
-            onMapTypeChange = {},
-            onEngineChange = {},
-            onZoomChange = {}
+            onFetchLocationRequested = {}
         )
     }
 }
