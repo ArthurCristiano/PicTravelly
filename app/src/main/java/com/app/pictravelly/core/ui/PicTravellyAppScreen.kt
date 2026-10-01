@@ -164,15 +164,22 @@ fun PicTravellyAppScreen(
                         navArgument("tripId") {
                             type = NavType.LongType
                             defaultValue = DestinationScreen.NO_TRIP_ID
+                        },
+                        navArgument("spotId") {
+                            type = NavType.LongType
+                            defaultValue = DestinationScreen.NO_SPOT_ID
                         }
                     )
                 ) { backStackEntry ->
                     val tripId = backStackEntry.arguments?.getLong("tripId")
                         ?: DestinationScreen.NO_TRIP_ID
+                    val spotId = backStackEntry.arguments?.getLong("spotId")
+                        ?: DestinationScreen.NO_SPOT_ID
 
                     val spotFormViewModel: SpotFormViewModel = viewModel(
                         factory = AppViewModelProvider.createSpotFormFactory(
                             tripId = tripId,
+                            spotId = spotId,
                             spotRepository = spotRepository,
                             tripRepository = tripRepository,
                             settingsRepository = settingsRepository
@@ -184,9 +191,11 @@ fun PicTravellyAppScreen(
                         initialSharedImages = pendingSharedImages,
                         onConsumeSharedImages = onConsumeSharedImages,
                         onNavigateBack = { navController.popBackStack() },
-                        onSpotSaved = { spotId ->
+                        onSpotSaved = { savedSpotId, isEditing ->
                             navController.popBackStack()
-                            navController.navigate(DestinationScreen.createSpotDetailRoute(spotId))
+                            if (!isEditing) {
+                                navController.navigate(DestinationScreen.createSpotDetailRoute(savedSpotId))
+                            }
                         }
                     )
                 }
@@ -253,6 +262,13 @@ fun PicTravellyAppScreen(
                                 )
                             )
                         },
+                        onEditSpot = { editingSpotId ->
+                            navController.navigate(
+                                DestinationScreen.createSpotFormRoute(
+                                    spotId = editingSpotId
+                                )
+                            )
+                        },
                         onAddSpot = {
                             navController.navigate(DestinationScreen.createSpotFormRoute(tripId))
                         },
@@ -278,7 +294,14 @@ fun PicTravellyAppScreen(
 
                     SpotDetailRoute(
                         viewModel = spotDetailViewModel,
-                        onNavigateBack = { navController.popBackStack() }
+                        onNavigateBack = { navController.popBackStack() },
+                        onEditSpot = { editingSpotId ->
+                            navController.navigate(
+                                DestinationScreen.createSpotFormRoute(
+                                    spotId = editingSpotId
+                                )
+                            )
+                        }
                     )
                 }
             }

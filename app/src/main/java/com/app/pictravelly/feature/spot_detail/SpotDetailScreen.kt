@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -52,6 +53,7 @@ fun SpotDetailScreen(
     showDeleteDialog: Boolean,
     isMapExpanded: Boolean,
     onNavigateBack: () -> Unit,
+    onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
     onDeleteConfirm: () -> Unit,
     onDeleteDismiss: () -> Unit,
@@ -94,6 +96,12 @@ fun SpotDetailScreen(
                     },
                     actions = {
                         if (!uiState.isLoading && uiState.spotWithImages != null) {
+                            IconButton(onClick = onEditClick) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Editar Ponto"
+                                )
+                            }
                             IconButton(onClick = onDeleteClick) {
                                 Icon(
                                     imageVector = Icons.Default.Delete,

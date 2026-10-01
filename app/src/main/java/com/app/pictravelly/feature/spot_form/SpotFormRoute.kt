@@ -25,7 +25,7 @@ import java.io.File
 fun SpotFormRoute(
     viewModel: SpotFormViewModel,
     onNavigateBack: () -> Unit,
-    onSpotSaved: (Long) -> Unit,
+    onSpotSaved: (Long, Boolean) -> Unit,
     modifier: Modifier = Modifier,
     initialSharedImages: List<String>? = null,
     onConsumeSharedImages: () -> Unit = {}
@@ -90,16 +90,18 @@ fun SpotFormRoute(
         }
     }
 
-    LaunchedEffect(Unit) {
-        if (LocationHelper.hasLocationPermission(context)) {
-            viewModel.captureLocation(context, overwriteAddress = false)
-        } else {
-            locationPermissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
+    LaunchedEffect(uiState.isEditing) {
+        if (!uiState.isEditing) {
+            if (LocationHelper.hasLocationPermission(context)) {
+                viewModel.captureLocation(context, overwriteAddress = false)
+            } else {
+                locationPermissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
                 )
-            )
+            }
         }
     }
 
@@ -127,7 +129,11 @@ fun SpotFormRoute(
         onAddPhotoCamera = ::launchCamera,
         onAddPhotoGallery = { photoPickerLauncher.launch("image/*") },
         onRemovePhoto = viewModel::removeImageUri,
-        onSaveClick = { viewModel.saveSpot(onSpotSaved) },
+        onSaveClick = {
+            viewModel.saveSpot { savedId ->
+                onSpotSaved(savedId, uiState.isEditing)
+            }
+        },
         modifier = modifier
     )
 }

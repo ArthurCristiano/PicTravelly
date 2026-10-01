@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.AlertDialog
@@ -43,6 +44,7 @@ fun SpotPageCard(
     spotWithImages: TouristSpotWithImages,
     showUnlinkAction: Boolean,
     onClick: () -> Unit,
+    onEdit: () -> Unit,
     onUnlink: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -128,6 +130,14 @@ fun SpotPageCard(
                                 modifier = Modifier.size(20.dp)
                             )
                         }
+                    }
+                    IconButton(onClick = onEdit) {
+                        Icon(
+                            Icons.Default.Edit,
+                            contentDescription = "Editar ponto",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                     IconButton(onClick = { showDeleteSpotDialog = true }) {
                         Icon(

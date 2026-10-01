@@ -69,7 +69,7 @@ fun SpotFormScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Novo Ponto Turístico") },
+                title = { Text(if (uiState.isEditing) "Editar Ponto Turístico" else "Novo Ponto Turístico") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
@@ -79,6 +79,18 @@ fun SpotFormScreen(
             )
         }
     ) { innerPadding ->
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            }
+            return@Scaffold
+        }
+
         Column(
             modifier = modifier
                 .fillMaxSize()
@@ -89,7 +101,10 @@ fun SpotFormScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            PicTravellyTitle(text = "Registrar Lembrança", modifier = Modifier.fillMaxWidth())
+            PicTravellyTitle(
+                text = if (uiState.isEditing) "Editar Lembrança" else "Registrar Lembrança",
+                modifier = Modifier.fillMaxWidth()
+            )
 
             if (uiState.errorMessage != null) {
                 Text(
@@ -231,7 +246,7 @@ fun SpotFormScreen(
                 }
             } else {
                 PicTravellyButton(
-                    text = "Salvar no Diário",
+                    text = if (uiState.isEditing) "Salvar Alterações" else "Salvar no Diário",
                     onClick = onSaveClick,
                     modifier = Modifier.fillMaxWidth(),
                     enabled = uiState.isValid

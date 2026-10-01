@@ -58,6 +58,9 @@ enum class DestinationScreen(
         /** Identificador usado quando o ponto não pertence a nenhuma viagem. */
         const val NO_TRIP_ID = -1L
 
+        /** Identificador padrão quando nenhum ponto está sendo editado. */
+        const val NO_SPOT_ID = -1L
+
         const val SPOT_DETAIL_BASE_ROUTE = "spot_detail_route"
         const val SPOT_DETAIL_ROUTE = "$SPOT_DETAIL_BASE_ROUTE/{spotId}"
 
@@ -67,8 +70,8 @@ enum class DestinationScreen(
         /** O formulário de viagem serve para criar e para editar. */
         const val TRIP_FORM_ROUTE = "trip_form_route?tripId={tripId}"
 
-        /** O formulário de ponto pode vir com a viagem já escolhida. */
-        const val SPOT_FORM_ROUTE = "spot_form_route?tripId={tripId}"
+        /** O formulário de ponto pode vir com a viagem já escolhida e/ou para editar um ponto existente. */
+        const val SPOT_FORM_ROUTE = "spot_form_route?tripId={tripId}&spotId={spotId}"
 
         fun createSpotDetailRoute(spotId: Long): String = "$SPOT_DETAIL_BASE_ROUTE/$spotId"
 
@@ -77,8 +80,10 @@ enum class DestinationScreen(
         fun createTripFormRoute(tripId: Long = NO_TRIP_ID): String =
             "${TRIP_FORM.route}?tripId=$tripId"
 
-        fun createSpotFormRoute(tripId: Long = NO_TRIP_ID): String =
-            "${SPOT_FORM.route}?tripId=$tripId"
+        fun createSpotFormRoute(
+            tripId: Long = NO_TRIP_ID,
+            spotId: Long = NO_SPOT_ID
+        ): String = "${SPOT_FORM.route}?tripId=$tripId&spotId=$spotId"
 
         /** "spot_form_route?tripId=3" -> "spot_form_route". */
         fun baseRouteOf(route: String?): String = route?.substringBefore('?').orEmpty()

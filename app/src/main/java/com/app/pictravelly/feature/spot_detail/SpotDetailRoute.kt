@@ -12,6 +12,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 fun SpotDetailRoute(
     viewModel: SpotDetailViewModel,
     onNavigateBack: () -> Unit,
+    onEditSpot: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -23,6 +24,7 @@ fun SpotDetailRoute(
         showDeleteDialog = showDeleteDialog,
         isMapExpanded = isMapExpanded,
         onNavigateBack = onNavigateBack,
+        onEditClick = { uiState.spotWithImages?.let { onEditSpot(it.spot.id) } },
         onDeleteClick = { showDeleteDialog = true },
         onDeleteConfirm = {
             showDeleteDialog = false

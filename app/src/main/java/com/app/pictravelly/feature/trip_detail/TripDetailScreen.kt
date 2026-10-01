@@ -42,6 +42,7 @@ fun TripDetailScreen(
     showDeleteTripDialog: Boolean,
     onNavigateBack: () -> Unit,
     onEditTripClick: () -> Unit,
+    onEditSpotClick: (Long) -> Unit,
     onAddSpotClick: () -> Unit,
     onDeleteTripClick: () -> Unit,
     onDeleteTripConfirm: () -> Unit,
@@ -141,6 +142,7 @@ fun TripDetailScreen(
                         spotWithImages = spotWithImages,
                         showUnlinkAction = !uiState.isLooseGroup,
                         onClick = { onSpotClick(spotWithImages.spot.id) },
+                        onEdit = { onEditSpotClick(spotWithImages.spot.id) },
                         onUnlink = { onSpotUnlink(spotWithImages.spot.id) },
                         onDelete = { onSpotDelete(spotWithImages.spot.id) }
                     )

@@ -14,6 +14,7 @@ fun TripDetailRoute(
     viewModel: TripDetailViewModel,
     onNavigateBack: () -> Unit,
     onEditTrip: (Long) -> Unit,
+    onEditSpot: (Long) -> Unit,
     onAddSpot: () -> Unit,
     onNavigateToSpotDetail: (Long) -> Unit,
     modifier: Modifier = Modifier
@@ -31,6 +32,7 @@ fun TripDetailRoute(
         showDeleteTripDialog = showDeleteTripDialog,
         onNavigateBack = onNavigateBack,
         onEditTripClick = { uiState.tripHeader?.let { onEditTrip(it.id) } },
+        onEditSpotClick = onEditSpot,
         onAddSpotClick = onAddSpot,
         onDeleteTripClick = { showDeleteTripDialog = true },
         onDeleteTripConfirm = {

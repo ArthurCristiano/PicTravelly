@@ -11,6 +11,7 @@ import com.app.pictravelly.core.data.SettingsRepository
 import com.app.pictravelly.core.data.TouristSpotRepository
 import com.app.pictravelly.core.data.TripRepository
 import com.app.pictravelly.core.map.MapConfigViewModel
+import com.app.pictravelly.core.navigation.DestinationScreen
 import com.app.pictravelly.feature.home.HomeViewModel
 import com.app.pictravelly.feature.map.MapViewModel
 import com.app.pictravelly.feature.settings.SettingsViewModel
@@ -130,7 +131,8 @@ object AppViewModelProvider {
     }
 
     fun createSpotFormFactory(
-        tripId: Long,
+        tripId: Long = DestinationScreen.NO_TRIP_ID,
+        spotId: Long = DestinationScreen.NO_SPOT_ID,
         spotRepository: TouristSpotRepository,
         tripRepository: TripRepository,
         settingsRepository: SettingsRepository
@@ -143,7 +145,8 @@ object AppViewModelProvider {
                         repository = spotRepository,
                         tripRepository = tripRepository,
                         settingsRepository = settingsRepository,
-                        initialTripId = tripId
+                        initialTripId = tripId,
+                        spotId = spotId
                     ) as T
                 }
                 throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")

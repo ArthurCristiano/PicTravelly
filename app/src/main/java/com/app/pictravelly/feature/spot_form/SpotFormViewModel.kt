@@ -30,6 +30,11 @@ private data class SpotFormTransientState(
     val longitude: Double = LocationHelper.DEFAULT_LONGITUDE,
     val imageUris: List<String> = emptyList(),
     val tripId: Long? = null,
+    val visitDate: Long = System.currentTimeMillis(),
+    val createdAt: Long = System.currentTimeMillis(),
+    val offlineMapSnapshotUri: String? = null,
+    val isEditing: Boolean = false,
+    val isLoading: Boolean = false,
     val isLocatingDevice: Boolean = false,
     val isResolvingAddress: Boolean = false,
     val isUsingFallbackLocation: Boolean = true,
@@ -46,6 +51,8 @@ data class SpotFormUiState(
     val imageUris: List<String> = emptyList(),
     val tripId: Long? = null,
     val availableTrips: List<TripEntity> = emptyList(),
+    val isEditing: Boolean = false,
+    val isLoading: Boolean = false,
     val isLocatingDevice: Boolean = false,
     val isResolvingAddress: Boolean = false,
     val isUsingFallbackLocation: Boolean = true,
@@ -63,11 +70,18 @@ class SpotFormViewModel(
     private val repository: TouristSpotRepository,
     tripRepository: TripRepository,
     settingsRepository: SettingsRepository,
-    initialTripId: Long = DestinationScreen.NO_TRIP_ID
+    initialTripId: Long = DestinationScreen.NO_TRIP_ID,
+    private val spotId: Long = DestinationScreen.NO_SPOT_ID
 ) : ViewModel() {
 
+    private val isEditing = spotId != DestinationScreen.NO_SPOT_ID
+
     private val _transientState = MutableStateFlow(
-        SpotFormTransientState(tripId = initialTripId.takeIf { it != DestinationScreen.NO_TRIP_ID })
+        SpotFormTransientState(
+            tripId = initialTripId.takeIf { it != DestinationScreen.NO_TRIP_ID },
+            isEditing = isEditing,
+            isLoading = isEditing
+        )
     )
 
     val uiState: StateFlow<SpotFormUiState> = combine(
@@ -84,6 +98,8 @@ class SpotFormViewModel(
             imageUris = transient.imageUris,
             tripId = transient.tripId,
             availableTrips = trips,
+            isEditing = transient.isEditing,
+            isLoading = transient.isLoading,
             isLocatingDevice = transient.isLocatingDevice,
             isResolvingAddress = transient.isResolvingAddress,
             isUsingFallbackLocation = transient.isUsingFallbackLocation,
@@ -95,8 +111,50 @@ class SpotFormViewModel(
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = SpotFormUiState()
+        initialValue = SpotFormUiState(
+            isEditing = isEditing,
+            isLoading = isEditing
+        )
     )
+
+    init {
+        if (isEditing) {
+            loadSpot()
+        }
+    }
+
+    private fun loadSpot() {
+        _transientState.update { it.copy(isLoading = true) }
+        viewModelScope.launch {
+            val spotWithImages = repository.getSpotOnce(spotId)
+            if (spotWithImages == null) {
+                _transientState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Ponto turístico não encontrado."
+                    )
+                }
+                return@launch
+            }
+            val spot = spotWithImages.spot
+            _transientState.update {
+                it.copy(
+                    title = spot.title,
+                    description = spot.description,
+                    locationName = spot.locationName,
+                    latitude = spot.latitude,
+                    longitude = spot.longitude,
+                    tripId = spot.tripId,
+                    visitDate = spot.visitDate,
+                    createdAt = spot.createdAt,
+                    offlineMapSnapshotUri = spot.offlineMapSnapshotUri,
+                    imageUris = spotWithImages.images.map { img -> img.imageUri },
+                    isUsingFallbackLocation = false,
+                    isLoading = false
+                )
+            }
+        }
+    }
 
     fun updateTitle(newTitle: String) =
         _transientState.update { it.copy(title = newTitle, errorMessage = null) }
@@ -205,22 +263,35 @@ class SpotFormViewModel(
             _transientState.update { it.copy(isSaving = true) }
             try {
                 val spot = TouristSpotEntity(
+                    id = if (isEditing) spotId else 0L,
                     tripId = currentState.tripId,
                     title = currentState.title.trim(),
                     description = currentState.description.trim(),
                     locationName = currentState.locationName.trim(),
-                    visitDate = System.currentTimeMillis(),
+                    visitDate = if (isEditing) currentState.visitDate else System.currentTimeMillis(),
                     latitude = currentState.latitude,
-                    longitude = currentState.longitude
+                    longitude = currentState.longitude,
+                    offlineMapSnapshotUri = currentState.offlineMapSnapshotUri,
+                    createdAt = if (isEditing) currentState.createdAt else System.currentTimeMillis()
                 )
 
                 val images = currentState.imageUris.mapIndexed { index, uri ->
-                    SpotImageEntity(spotId = 0, imageUri = uri, isCover = index == 0)
+                    SpotImageEntity(
+                        spotId = if (isEditing) spotId else 0L,
+                        imageUri = uri,
+                        isCover = index == 0
+                    )
                 }
 
-                val generatedId = repository.insertSpotWithImages(spot, images)
+                val savedId = if (isEditing) {
+                    repository.updateSpotWithImages(spot, images)
+                    spotId
+                } else {
+                    repository.insertSpotWithImages(spot, images)
+                }
+
                 _transientState.update { it.copy(isSaving = false) }
-                onSuccess(generatedId)
+                onSuccess(savedId)
             } catch (e: Exception) {
                 _transientState.update {
                     it.copy(
